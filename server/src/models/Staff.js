@@ -48,9 +48,14 @@ const staffSchema = new mongoose.Schema(
       type: String,
       default: ''
     },
-    isActive: {
+isActive: {
       type: Boolean,
       default: true
+    },
+    advanceBalance: {
+      type: Number,
+      default: 0,
+      description: 'Total amount of money the staff member owes the company as advance'
     }
   },
   { timestamps: true }

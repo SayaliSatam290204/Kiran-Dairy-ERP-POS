@@ -4,10 +4,10 @@ import Staff from '../models/Staff.js';
 import { responseHelper } from '../utils/responseHelper.js';
 
 export const staffPaymentController = {
-  // Get all staff payments
+// Get all staff payments
   getAllPayments: async (req, res) => {
     try {
-      const { shopId, staffId, month, status } = req.query;
+      const { shopId, staffId, month, status, includeInactive } = req.query;
       const userRole = req.user.role;
 
       let query = {};
@@ -32,12 +32,22 @@ export const staffPaymentController = {
         query.status = status;
       }
 
-      const payments = await StaffPayment.find(query)
-        .populate('staffId', 'name email')
+      // Get payments with staff populated
+      let payments = await StaffPayment.find(query)
+        .populate('staffId', 'name email isActive')
         .populate('shopId', 'name')
         .populate('approvedBy', 'name')
         .populate('paidBy', 'name')
         .sort({ paymentDate: -1 });
+
+      // Filter out payments where staff is deleted/inactive (unless explicitly included)
+      if (!includeInactive) {
+        payments = payments.filter(p => {
+          // Keep if staffId is populated AND isActive is NOT explicitly false
+          // Also filter out if staffId is null (orphaned records from hard deletes)
+          return p.staffId && p.staffId.isActive !== false;
+        });
+      }
 
       return responseHelper.success(res, payments, 'Payments retrieved successfully');
     } catch (error) {
@@ -68,14 +78,14 @@ export const staffPaymentController = {
 
       return responseHelper.success(res, payment, 'Payment retrieved successfully');
     } catch (error) {
-      return responseHelper.error(res, error.message, 500);
+return responseHelper.error(res, error.message, 500);
     }
   },
 
   // Create staff payment
   createPayment: async (req, res) => {
     try {
-      const { staffId, amount, paymentDate, paymentMethod, paymentPeriod, month, notes } = req.body;
+      const { staffId, amount, paymentDate, paymentMethod, paymentPeriod, month, notes, isAdvance } = req.body;
       const userRole = req.user.role;
       const userId = req.user.id;
 
@@ -94,26 +104,64 @@ export const staffPaymentController = {
         return responseHelper.error(res, 'Unauthorized access', 403);
       }
 
-      // Check if payment already exists for this month
-      const existingPayment = await StaffPayment.findOne({
-        staffId,
-        month,
-        shopId: staff.shopId
-      });
+      // Check if payment already exists for this month (only for non-advance payments)
+      if (!isAdvance) {
+        const existingPayment = await StaffPayment.findOne({
+          staffId,
+          month,
+          shopId: staff.shopId
+        });
 
-      if (existingPayment) {
-        return responseHelper.error(res, 'Payment already exists for this month', 400);
+        if (existingPayment) {
+          return responseHelper.error(res, 'Payment already exists for this month', 400);
+        }
       }
+
+// Handle advance payment vs regular salary payment
+      let finalAmount = amount;
+      let advanceAmountVal = 0;
+      let deductionAmountVal = 0;
+      const previousBalance = staff.advanceBalance || 0;
+      
+      if (isAdvance === true) {
+        // Advance payment: Increment the staff's advance balance
+        const newAdvanceBalance = previousBalance + amount;
+        await Staff.findByIdAndUpdate(staffId, { advanceBalance: newAdvanceBalance });
+        advanceAmountVal = amount;
+      } else {
+        // Regular salary payment: Check if there's an advance balance to deduct
+        if (previousBalance > 0) {
+          if (previousBalance >= amount) {
+            // Advance balance covers the full payment amount
+            deductionAmountVal = amount;
+            await Staff.findByIdAndUpdate(staffId, { advanceBalance: previousBalance - amount });
+            finalAmount = 0; // No actual payment needed
+          } else {
+            // Partial deduction - advance balance is less than payment amount
+            deductionAmountVal = previousBalance;
+            finalAmount = amount - previousBalance;
+            await Staff.findByIdAndUpdate(staffId, { advanceBalance: 0 });
+          }
+        }
+      }
+
+      // If this is an advance, the amount is always the full amount
+      // If this is a regular payment and finalAmount is 0, we still need to record the transaction as "deducted"
+      const paymentAmount = isAdvance ? amount : finalAmount;
 
       const newPayment = new StaffPayment({
         staffId,
         shopId: staff.shopId,
-        amount,
+        amount: paymentAmount,
         paymentDate,
         paymentMethod: paymentMethod || 'cash',
         paymentPeriod,
         month,
-        notes,
+        notes: isAdvance ? `Advance payment. Previous balance: ${previousBalance}` : notes,
+        isAdvance: isAdvance || false,
+        advanceAmount: advanceAmountVal,
+        deductionAmount: deductionAmountVal,
+        previousAdvanceBalance: previousBalance,
         approvedBy: userId
       });
 

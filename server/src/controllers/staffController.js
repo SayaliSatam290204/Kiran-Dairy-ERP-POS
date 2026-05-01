@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import Staff from '../models/Staff.js';
+import StaffPayment from '../models/StaffPayment.js';
 import { responseHelper } from '../utils/responseHelper.js';
 
 export const staffController = {
@@ -145,7 +146,7 @@ export const staffController = {
     }
   },
 
-  // Delete staff (soft delete)
+// Delete staff (soft delete)
   deleteStaff: async (req, res) => {
     try {
       const { id } = req.params;
@@ -164,6 +165,9 @@ export const staffController = {
       staff.isActive = false;
       staff.status = 'inactive';
       await staff.save();
+
+      // Also delete all associated payments for this staff member
+      await StaffPayment.deleteMany({ staffId: id });
 
       return responseHelper.success(res, staff, 'Staff deleted successfully');
     } catch (error) {

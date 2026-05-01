@@ -44,9 +44,29 @@ const staffPaymentSchema = new mongoose.Schema(
       type: String,
       required: true
     },
-    notes: {
+notes: {
       type: String,
       default: ''
+    },
+    isAdvance: {
+      type: Boolean,
+      default: false,
+      description: 'Flag to distinguish between regular salary payment and advance payout'
+    },
+    advanceAmount: {
+      type: Number,
+      default: 0,
+      description: 'Amount of advance given in this transaction (if isAdvance is true)'
+    },
+    deductionAmount: {
+      type: Number,
+      default: 0,
+      description: 'Amount deducted from this payment to repay previous advance'
+    },
+    previousAdvanceBalance: {
+      type: Number,
+      default: 0,
+      description: 'Staff advance balance before this payment was processed'
     },
     approvedBy: {
       type: mongoose.Schema.Types.ObjectId,

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { staffApi } from "../../api/staffApi.js";
 import { adminApi } from "../../api/adminApi.js";
@@ -12,6 +13,7 @@ import { StaffPerformanceModal } from "../../components/StaffPerformanceModal.js
 
 export const Staff = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [staff, setStaff] = useState([]);
   const [shops, setShops] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -159,10 +161,20 @@ export const Staff = () => {
     }
   };
 
-  const handleClosePerformanceModal = () => {
+const handleClosePerformanceModal = () => {
     setShowPerformanceModal(false);
     setSelectedStaff(null);
     setPerformanceData(null);
+  };
+
+  // Open Staff Payment page with staff member pre-selected
+  const handleGiveAdvance = (staffMember) => {
+    // Store the selected staff in localStorage to pre-select in StaffPayment
+    localStorage.setItem('prefillStaffPayment', JSON.stringify({
+      staffId: staffMember._id,
+      isAdvance: true
+    }));
+    navigate('/admin/staff-payment');
   };
 
   return (
@@ -195,7 +207,8 @@ export const Staff = () => {
                 <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Phone</th>
                 <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Shop</th>
                 <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Shifts</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Salary</th>
+<th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Salary</th>
+                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Outstanding Advance</th>
                 <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Status</th>
                 <th className="px-6 py-3 text-right text-sm font-semibold text-gray-900">Actions</th>
               </tr>
@@ -216,7 +229,18 @@ export const Staff = () => {
                       ))}
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-600">₹{member.baseSalary}</td>
+<td className="px-6 py-4 text-sm text-gray-600">₹{member.baseSalary}</td>
+                  <td className="px-6 py-4 text-sm">
+                    {(member.advanceBalance || 0) > 0 ? (
+                      <span className="px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700">
+                        ₹{member.advanceBalance} owed
+                      </span>
+                    ) : (
+                      <span className="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">
+                        None
+                      </span>
+                    )}
+                  </td>
                   <td className="px-6 py-4 text-sm">
                     <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
                       member.status === 'active'
@@ -227,6 +251,15 @@ export const Staff = () => {
                     </span>
                   </td>
                   <td className="px-6 py-4 text-sm text-right space-x-2">
+                    {(member.advanceBalance || 0) > 0 && (
+                      <button
+                        onClick={() => handleGiveAdvance(member)}
+                        className="text-orange-600 hover:text-orange-700 font-semibold text-xs"
+                        title="Give Advance"
+                      >
+                        💰 Advance
+                      </button>
+                    )}
                     <button
                       onClick={() => handleViewPerformance(member)}
                       className="text-green-600 hover:text-green-700 font-semibold"

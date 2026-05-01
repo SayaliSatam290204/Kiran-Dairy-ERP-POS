@@ -19,17 +19,20 @@ export const StaffPayment = () => {
     month: "",
     status: "",
     staffId: ""
-  });
-  const [formData, setFormData] = useState({
+});
+  
+const [formData, setFormData] = useState({
     staffId: "",
     amount: "",
     paymentDate: new Date().toISOString().split('T')[0],
     paymentMethod: "cash",
     month: "",
-    notes: ""
+    notes: "",
+    isAdvance: false
   });
+  const [selectedStaffAdvance, setSelectedStaffAdvance] = useState(0);
 
-  // Fetch payments and staff on mount
+// Fetch payments and staff on mount
   useEffect(() => {
     fetchPayments();
     fetchStaff();
@@ -47,16 +50,41 @@ export const StaffPayment = () => {
     }
   };
 
-  const fetchStaff = async () => {
+const fetchStaff = async () => {
     try {
       const response = await staffApi.getAllStaff();
-      setStaff(response.data.data);
+      const staffData = response.data.data;
+      setStaff(staffData);
+      
+      // Check for pre-filled staff payment from Staff page
+      const prefillData = localStorage.getItem('prefillStaffPayment');
+      if (prefillData) {
+        try {
+          const data = JSON.parse(prefillData);
+          if (data.staffId) {
+            setFormData(prev => ({ ...prev, staffId: data.staffId, isAdvance: data.isAdvance || false }));
+            // Set advance balance preview
+            const selectedStaffMember = staffData.find(s => s._id === data.staffId);
+            if (selectedStaffMember) {
+              setSelectedStaffAdvance(selectedStaffMember.advanceBalance || 0);
+            }
+            // Show modal after brief delay to ensure modal is ready
+            setTimeout(() => {
+              setShowModal(true);
+            }, 150);
+          }
+        } catch (e) {
+          console.error('Error parsing prefill data', e);
+        }
+        // Clear the prefill data after use
+        localStorage.removeItem('prefillStaffPayment');
+      }
     } catch (error) {
       toast.error("Failed to fetch staff");
     }
   };
 
-  const handleOpenModal = (payment = null) => {
+const handleOpenModal = (payment = null) => {
     if (payment) {
       setEditingId(payment._id);
       setFormData({
@@ -65,10 +93,19 @@ export const StaffPayment = () => {
         paymentDate: payment.paymentDate.split('T')[0],
         paymentMethod: payment.paymentMethod,
         month: payment.month,
-        notes: payment.notes
+        notes: payment.notes || "",
+        isAdvance: payment.isAdvance || false
       });
     }
     setShowModal(true);
+    
+    // When staff is selected, show their advance balance
+    if (formData.staffId) {
+      const selectedStaffMember = staff.find(s => s._id === formData.staffId);
+      if (selectedStaffMember) {
+        setSelectedStaffAdvance(selectedStaffMember.advanceBalance || 0);
+      }
+    }
   };
 
   const handleCloseModal = () => {
@@ -80,13 +117,20 @@ export const StaffPayment = () => {
       paymentDate: new Date().toISOString().split('T')[0],
       paymentMethod: "cash",
       month: "",
-      notes: ""
+      notes: "",
+      isAdvance: false
     });
   };
 
-  const handleChangeForm = (e) => {
+const handleChangeForm = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    
+    // When staff is selected, show their advance balance
+    if (name === 'staffId' && value) {
+      const selectedStaffMember = staff.find(s => s._id === value);
+      setSelectedStaffAdvance(selectedStaffMember?.advanceBalance || 0);
+    }
   };
 
   const handleChangeFilter = (e) => {
@@ -225,9 +269,10 @@ export const StaffPayment = () => {
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <table className="w-full">
             <thead className="bg-gray-50 border-b">
-              <tr>
+<tr>
                 <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Staff Name</th>
                 <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Amount</th>
+                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Deductions</th>
                 <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Month</th>
                 <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Payment Method</th>
                 <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Status</th>
@@ -237,9 +282,18 @@ export const StaffPayment = () => {
             </thead>
             <tbody className="divide-y">
               {payments.map(payment => (
-                <tr key={payment._id} className="hover:bg-gray-50">
+<tr key={payment._id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 text-sm font-medium text-gray-900">{payment.staffId?.name || 'N/A'}</td>
                   <td className="px-6 py-4 text-sm text-gray-600">₹{payment.amount}</td>
+                  <td className="px-6 py-4 text-sm text-gray-600">
+                    {payment.deductionAmount > 0 ? (
+                      <span className="text-red-600 font-semibold">₹{payment.deductionAmount}</span>
+                    ) : payment.isAdvance ? (
+                      <span className="text-green-600 font-semibold">-₹{payment.advanceAmount}</span>
+                    ) : (
+                      <span className="text-gray-400">-</span>
+                    )}
+                  </td>
                   <td className="px-6 py-4 text-sm text-gray-600">{payment.month}</td>
                   <td className="px-6 py-4 text-sm text-gray-600">{payment.paymentMethod}</td>
                   <td className="px-6 py-4 text-sm">
@@ -298,7 +352,7 @@ export const StaffPayment = () => {
       {showModal && (
         <Modal isOpen={showModal} onClose={handleCloseModal} title={editingId ? "Edit Payment" : "Create Payment"}>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="mb-4">
+<div className="mb-4">
               <label className="block text-sm font-semibold mb-2 text-gray-800">Staff *</label>
               <select
                 name="staffId"
@@ -312,9 +366,19 @@ export const StaffPayment = () => {
                   <option key={s._id} value={s._id}>{s.name}</option>
                 ))}
               </select>
+              {formData.staffId && selectedStaffAdvance > 0 && (
+                <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded-md">
+                  <p className="text-sm font-semibold text-yellow-800">
+                    Outstanding Advance: ₹{selectedStaffAdvance}
+                  </p>
+                  <p className="text-xs text-yellow-600">
+                    This amount will be deducted from the salary payment
+                  </p>
+                </div>
+              )}
             </div>
 
-            <Input
+<Input
               label="Amount *"
               name="amount"
               type="number"
@@ -322,6 +386,30 @@ export const StaffPayment = () => {
               onChange={handleChangeForm}
               required
             />
+            
+            {/* Deduction Preview - Shows when staff has outstanding advance */}
+            {formData.staffId && formData.amount && selectedStaffAdvance > 0 && !formData.isAdvance && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-md">
+                <p className="text-sm font-bold text-red-800 mb-2">💰 Salary Deduction Calculation:</p>
+                <div className="text-sm text-gray-700 space-y-1">
+                  <p>Outstanding Advance: <span className="font-semibold">₹{selectedStaffAdvance}</span></p>
+                  <p>Salary Amount: <span className="font-semibold">₹{formData.amount}</span></p>
+                  <p className="border-t border-red-200 my-1"></p>
+                  {selectedStaffAdvance >= formData.amount ? (
+                    <>
+                      <p>Deduction: <span className="font-semibold text-red-600">₹{formData.amount}</span></p>
+                      <p>Remaining Balance After: <span className="font-semibold">₹{selectedStaffAdvance - formData.amount}</span></p>
+                      <p className="text-xs text-gray-500 mt-1">(Full salary will be deducted as advance repayment)</p>
+                    </>
+                  ) : (
+                    <>
+                      <p>Deduction: <span className="font-semibold text-red-600">₹{selectedStaffAdvance}</span></p>
+                      <p>Net Salary to Pay: <span className="font-semibold text-green-600">₹{formData.amount - selectedStaffAdvance}</span></p>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
 
             <Input
               label="Payment Month *"
@@ -351,7 +439,7 @@ export const StaffPayment = () => {
                 <option value="cash">Cash</option>
                 <option value="bank_transfer">Bank Transfer</option>
                 <option value="cheque">Cheque</option>
-                <option value="online">Online</option>
+<option value="online">Online</option>
               </select>
             </div>
 
@@ -361,6 +449,36 @@ export const StaffPayment = () => {
               value={formData.notes}
               onChange={handleChangeForm}
             />
+
+<div className="mb-4">
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  name="isAdvance"
+                  checked={formData.isAdvance}
+                  onChange={(e) => setFormData(prev => ({ ...prev, isAdvance: e.target.checked }))}
+                  className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
+                />
+                <span className="ml-2 text-sm font-semibold text-gray-800">Is Advance Payment?</span>
+              </label>
+              <p className="text-xs text-gray-500 mt-1 ml-6">
+                Check this if giving an advance (increments staff's advance balance)
+              </p>
+            </div>
+
+            {/* Advance Payment Preview - Shows when giving advance */}
+            {formData.staffId && formData.amount && formData.isAdvance && (
+              <div className="p-3 bg-green-50 border border-green-200 rounded-md">
+                <p className="text-sm font-bold text-green-800 mb-2">📌 Advance Payment Summary:</p>
+                <div className="text-sm text-gray-700 space-y-1">
+                  <p>Current Balance: <span className="font-semibold">₹{selectedStaffAdvance}</span></p>
+                  <p>New Advance: <span className="font-semibold text-green-600">+₹{formData.amount}</span></p>
+                  <p className="border-t border-green-200 my-1"></p>
+                  <p>New Total Balance: <span className="font-bold text-green-700">₹{selectedStaffAdvance + parseFloat(formData.amount || 0)}</span></p>
+                  <p className="text-xs text-gray-500 mt-1">(This amount will be deducted from future salary payments)</p>
+                </div>
+              </div>
+            )}
 
             <div className="flex gap-3 pt-4">
               <Button

@@ -74,12 +74,13 @@ export const ShopStaff = () => {
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <table className="w-full">
             <thead className="bg-gray-50 border-b">
-              <tr>
+<tr>
                 <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Name</th>
                 <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Email</th>
                 <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Phone</th>
                 <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Shifts</th>
                 <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Monthly Salary</th>
+                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Pending Advance</th>
                 <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Status</th>
                 <th className="px-6 py-3 text-right text-sm font-semibold text-gray-900">Actions</th>
               </tr>
@@ -99,7 +100,16 @@ export const ShopStaff = () => {
                       ))}
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-600">₹{member.baseSalary}</td>
+<td className="px-6 py-4 text-sm text-gray-600">₹{member.baseSalary}</td>
+                  <td className="px-6 py-4 text-sm">
+                    {member.advanceBalance > 0 ? (
+                      <span className="px-3 py-1 bg-red-100 text-red-700 text-xs font-semibold rounded-full">
+                        ₹{member.advanceBalance}
+                      </span>
+                    ) : (
+                      <span className="text-gray-400">-</span>
+                    )}
+                  </td>
                   <td className="px-6 py-4 text-sm">
                     <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
                       member.status === 'active'
