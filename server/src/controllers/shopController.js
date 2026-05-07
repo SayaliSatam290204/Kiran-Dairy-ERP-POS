@@ -90,12 +90,39 @@ export const shopController = {
       const shopId = req.user.shopId;
 
       const inventory = await Inventory.find({ shopId })
-        .populate("productId", "name sku price category unit imageUrl")
+        .populate("productId", "name sku price category unit imageUrl shopPrices")
         .sort({ createdAt: -1 });
 
-      return responseHelper.success(res, inventory, "Inventory fetched successfully");
+      // Add effectivePrice to each inventory item
+      const inventoryWithPrices = inventory.map(item => ({
+        ...item.toObject(),
+        productId: {
+          ...item.productId.toObject(),
+          effectivePrice: item.productId.shopPrices?.find(p => p.shopId.toString() === shopId.toString())?.price || item.productId.price
+        }
+      }));
+
+      return responseHelper.success(res, inventoryWithPrices, "Inventory fetched successfully");
     } catch (error) {
       return responseHelper.error(res, "Failed to fetch inventory", 500);
+    }
+  },
+
+  getProducts: async (req, res) => {
+    try {
+      const shopId = req.user.shopId;
+
+      const products = await Product.find({})
+        .populate('shopPrices.shopId', 'name');
+
+      const productsWithEffectivePrice = products.map(product => ({
+        ...product.toObject(),
+        effectivePrice: product.shopPrices?.find(p => p.shopId.toString() === shopId.toString())?.price || product.price
+      }));
+
+      responseHelper.success(res, productsWithEffectivePrice, 'Products with shop-specific pricing');
+    } catch (error) {
+      responseHelper.error(res, 'Failed to fetch products', 500);
     }
   },
 

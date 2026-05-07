@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect, useRef } from "react";
 import toast from "react-hot-toast";
-import { FaCreditCard, FaSync } from "react-icons/fa";
+import { FaSync } from "react-icons/fa";
 import { Card } from "../../components/ui/Card.jsx";
 import { Button } from "../../components/ui/Button.jsx";
 import { Modal } from "../../components/ui/Modal.jsx";
@@ -9,8 +9,9 @@ import { Skeleton } from "../../components/ui/Skeleton.jsx";
 import { shopApi } from "../../api/shopApi.js";
 import { salesApi } from "../../api/salesApi.js";
 import { formatCurrency } from "../../utils/formatCurrency.js";
+import { staffApi } from "../../api/staffApi.js";
 import { Bill } from "../Bill.jsx"; 
-
+import { useAuth } from "../../hooks/useAuth.js";
 export const POS = () => {
   const [products, setProducts] = useState([]);
   const [pageLoading, setPageLoading] = useState(true);
@@ -47,9 +48,46 @@ export const POS = () => {
   const [confirmRemoveOpen, setConfirmRemoveOpen] = useState(false);
   const [removeTarget, setRemoveTarget] = useState(null);
 
-  // bill preview after sale
   const [billOpen, setBillOpen] = useState(false);
   const [saleData, setSaleData] = useState(null);
+
+  const { user } = useAuth();
+  const [staffList, setStaffList] = useState([]);
+  const [selectedStaffId, setSelectedStaffId] = useState(localStorage.getItem("pos_staff_id") || "");
+  const [selectedShift, setSelectedShift] = useState(localStorage.getItem("pos_shift") || "morning");
+
+  useEffect(() => {
+    if (user?.shopId) {
+      fetchStaff();
+    }
+  }, [user?.shopId]);
+
+  const fetchStaff = async () => {
+    try {
+      const response = await staffApi.getStaffByShop(user.shopId);
+      setStaffList(response.data.data || []);
+      
+      // If only one staff member exists, select them by default if none selected
+      if (response.data.data?.length === 1 && !selectedStaffId) {
+        setSelectedStaffId(response.data.data[0]._id);
+        localStorage.setItem("pos_staff_id", response.data.data[0]._id);
+      }
+    } catch (error) {
+      console.error("Failed to fetch staff:", error);
+    }
+  };
+
+  const handleStaffChange = (e) => {
+    const id = e.target.value;
+    setSelectedStaffId(id);
+    localStorage.setItem("pos_staff_id", id);
+  };
+
+  const handleShiftChange = (e) => {
+    const shift = e.target.value;
+    setSelectedShift(shift);
+    localStorage.setItem("pos_shift", shift);
+  };
 
   // ===== Images =====
   const FALLBACK_IMG =
@@ -234,8 +272,9 @@ export const POS = () => {
         {
           productId: pid,
           productName: product.productId?.name,
-          price: product.productId?.price || 0,
+          price: product.productId?.effectivePrice || product.productId?.price || 0,
           quantity: 1,
+          unit: product.productId?.unit || 'unit',
         },
       ]);
       toast.success("Added to cart");
@@ -309,7 +348,7 @@ export const POS = () => {
     if (!customerUpiId.trim()) {
       return toast.error("Please enter a valid UPI ID (e.g. 9876543210@ybl)");
     }
-    const amountToRequest = paymentMethod === "split" ? upiAmount : grandTotal;
+    const amountToRequest = paymentMethod === "Cash + UPI" ? upiAmount : grandTotal;
     if (amountToRequest <= 0) {
       return toast.error("Invalid payment amount");
     }
@@ -329,6 +368,11 @@ export const POS = () => {
 
   const handleCheckout = async () => {
     if (cart.length === 0) return toast.error("Cart is empty");
+    
+    if (!selectedStaffId) {
+      toast.error("Please select a staff member first!");
+      return;
+    }
 
     // validate card details when card selected (non-split)
     if (!splitPayment && paymentMethod === "card") {
@@ -352,9 +396,12 @@ export const POS = () => {
           productName: item.productName,
           quantity: item.quantity,
           price: item.price,
+          unit: item.unit,
         })),
         totalAmount: grandTotal,
-        paymentMethod: splitPayment ? "split" : paymentMethod,
+        staffId: selectedStaffId || undefined,
+        shift: selectedShift,
+        paymentMethod: splitPayment ? "Cash + UPI" : paymentMethod,
         paymentDetails: splitPayment
           ? {
               upi: {
@@ -394,6 +441,10 @@ export const POS = () => {
             it.productName ||
             cart.find((c) => c.productId === it.productId)?.productName ||
             "Item",
+          unit:
+            it.unit ||
+            cart.find((c) => c.productId === it.productId)?.unit ||
+            "unit",
           subtotal: it.subtotal ?? (it.price || 0) * (it.quantity || 0),
         })),
         totalAmount: sale.totalAmount ?? grandTotal,
@@ -424,7 +475,43 @@ export const POS = () => {
 
   return (
     <div>
-      <h1 className="text-3xl font-bold mb-6">POS Billing</h1>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+        <div>
+          <h1 className="text-3xl font-bold">POS Billing</h1>
+          <p className="text-sm text-gray-500">Create new sales and print bills</p>
+        </div>
+
+        {/* Staff & Shift Selection */}
+        <div className="flex flex-wrap items-center gap-3 bg-white p-3 rounded-xl border border-gray-200 shadow-sm">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Staff:</span>
+            <select
+              value={selectedStaffId}
+              onChange={handleStaffChange}
+              className="text-sm font-semibold bg-gray-50 border-none rounded-lg focus:ring-2 focus:ring-blue-500 py-1.5 pl-3 pr-8"
+            >
+              <option value="">Select Staff</option>
+              {staffList.map(s => (
+                <option key={s._id} value={s._id}>{s.name}</option>
+              ))}
+            </select>
+          </div>
+          
+          <div className="h-6 w-px bg-gray-200 hidden sm:block"></div>
+
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Shift:</span>
+            <select
+              value={selectedShift}
+              onChange={handleShiftChange}
+              className="text-sm font-semibold bg-gray-50 border-none rounded-lg focus:ring-2 focus:ring-blue-500 py-1.5 pl-3 pr-8 capitalize"
+            >
+              <option value="morning">☀️ Morning</option>
+              <option value="evening">🌙 Evening</option>
+            </select>
+          </div>
+        </div>
+      </div>
 
       {pageLoading ? (
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
@@ -555,7 +642,10 @@ export const POS = () => {
                             {name}
                           </p>
                           <p className="text-sm font-bold text-green-600 mt-1">
-                            {formatCurrency(price)}
+                            {formatCurrency(product.productId.effectivePrice || price)}
+                            <span className="text-[10px] font-normal text-gray-500 ml-1">
+                              / {product.productId.unit}
+                            </span>
                           </p>
 
                           {/* Click to Add Button - Mobile */}
@@ -632,7 +722,7 @@ export const POS = () => {
                                 </div>
                                 <div className="flex justify-between text-gray-700">
                                   <span>Qty:</span>
-                                  <span className="font-semibold">{item.quantity}</span>
+                                  <span className="font-semibold">{item.quantity} {product?.productId?.unit}</span>
                                 </div>
                                 <div className="border-t pt-0.5 flex justify-between">
                                   <span className="font-bold text-gray-900">Total:</span>
@@ -726,12 +816,24 @@ export const POS = () => {
                       </div>
 
                       <Button
-                        onClick={() => setIsCheckoutOpen(true)}
-                        disabled={cart.length === 0}
-                        className="w-full mt-2 text-sm"
+                        onClick={() => {
+                          if (!selectedStaffId) {
+                            toast.error("Please select a staff member at the top first!");
+                            return;
+                          }
+                          setIsCheckoutOpen(true);
+                        }}
+                        disabled={cart.length === 0 || !selectedStaffId}
+                        className={`w-full mt-2 text-sm ${!selectedStaffId ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : ''}`}
                       >
                         Proceed to Pay
                       </Button>
+
+                      {!selectedStaffId && cart.length > 0 && (
+                        <p className="text-[10px] text-center text-red-500 font-bold mt-1 animate-pulse">
+                          ⚠️ Select Staff at top to Pay
+                        </p>
+                      )}
 
                       <button
                         className="w-full text-xs text-red-600 hover:text-red-700 mt-1"
@@ -800,7 +902,7 @@ export const POS = () => {
                     : "border-gray-200 bg-white hover:border-gray-300"
                 }`}
               >
-                <FaCreditCard className="text-3xl" />
+<span className="text-3xl">💳</span>
                 <div className="text-center">
                   <p className="font-semibold text-sm">Card</p>
                   <p className="text-xs text-gray-500">Debit/Credit/ATM</p>
@@ -811,7 +913,7 @@ export const POS = () => {
               <button
                 onClick={() => {
                   setSplitPayment(true);
-                  setPaymentMethod("split");
+                  setPaymentMethod("Cash + UPI");
                 }}
                 className={`p-4 rounded-xl border-2 transition-all duration-200 flex flex-col items-center gap-2 ${
                   splitPayment
@@ -851,7 +953,7 @@ export const POS = () => {
           {paymentMethod === "card" && !splitPayment && (
             <div className="bg-gradient-to-br from-slate-50 to-gray-50 p-5 rounded-xl border border-gray-200">
               <p className="text-sm font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                <span className="text-lg flex items-center gap-1"><FaCreditCard /> Card Details</span>
+💳 Card Details
               </p>
 
               <div className="space-y-4">
@@ -1000,7 +1102,7 @@ export const POS = () => {
                     />
                     <button
                       onClick={handleSendUpiRequest}
-                      disabled={!customerUpiId.trim() || isSendingUpi || loading || (paymentMethod === "split" && upiAmount <= 0) }
+                      disabled={!customerUpiId.trim() || isSendingUpi || loading || (paymentMethod === "Cash + UPI" && upiAmount <= 0) }
                       className={`px-6 py-2.5 rounded-lg font-semibold text-white transition-all whitespace-nowrap ${
                         !customerUpiId.trim() || isSendingUpi
                           ? "bg-blue-300 cursor-not-allowed"
@@ -1020,7 +1122,7 @@ export const POS = () => {
                       <div>
                         <p className="text-sm font-bold text-green-800">Request Sent Successfully!</p>
                         <p className="text-xs text-green-700 mt-0.5">
-                          Requested <strong>{formatCurrency(paymentMethod === "split" ? upiAmount : grandTotal)}</strong> from <span className="font-semibold">{customerUpiId}</span>. Please ask the customer to check their UPI app, approve the payment, and then click "Complete Payment" below.
+                          Requested <strong>{formatCurrency(paymentMethod === "Cash + UPI" ? upiAmount : grandTotal)}</strong> from <span className="font-semibold">{customerUpiId}</span>. Please ask the customer to check their UPI app, approve the payment, and then click "Complete Payment" below.
                         </p>
                       </div>
                     </div>
@@ -1073,7 +1175,7 @@ export const POS = () => {
                     disabled={loading}
                   >
                     <option value="cash">💵 Cash</option>
-                    <option value="card"><FaCreditCard /> Card</option>
+<option value="card">💳 Card</option>
                   </select>
 
                   <p className="text-xs text-gray-600 mt-2">

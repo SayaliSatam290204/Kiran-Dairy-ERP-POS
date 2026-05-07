@@ -18,8 +18,14 @@ export const shopApi = {
     }),
   // Restock Requests (shop submits to admin)
   createRestockRequest: (data) => axiosInstance.post('/ledger/restock-requests', data),
-  getPreviewData: () => axiosInstance.get('/shop/preview') // Landing page charts
+  getPreviewData: () => axiosInstance.get('/shop/preview'), // Landing page charts
+  
+  postDiscrepancy: (dispatchId, items) => axiosInstance.post('/dispatch/discrepancy', { dispatchId, items }),
+  getPendingDiscrepancies: () => axiosInstance.get('/dispatch/discrepancies/pending'),
+  resolveDiscrepancy: (id, data) => axiosInstance.patch(`/dispatch/discrepancy/${id}/resolve`, data)
 };
+
+
 
 
 

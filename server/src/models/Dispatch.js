@@ -43,7 +43,7 @@ const dispatchSchema = new mongoose.Schema(
     ],
     status: {
       type: String,
-      enum: ['created', 'dispatched', 'received', 'pending'],
+      enum: ['created', 'dispatched', 'received', 'pending', 'rejected'],
       default: 'created'
     },
     dispatchDate: {

@@ -278,7 +278,7 @@ export const SuperAdminDashboard = () => {
     );
   }
 
-  const { summary, branchAnalytics, productDistribution } = dashboardData;
+  const { summary, branchAnalytics, productDistribution, staffRevenue } = dashboardData;
 
   const overviewCards = [
     {
@@ -482,7 +482,22 @@ export const SuperAdminDashboard = () => {
           </Row>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            <ChartContainer title="Revenue Overview">
+            <ChartContainer title="Business Growth Trend (Daily Revenue)" height={350}>
+              <RevenueTrendChart data={dashboardData.dailyTrends || []} />
+            </ChartContainer>
+
+            <ChartContainer title="Branch Revenue Contribution" height={350}>
+              <RevenueDoughnut 
+                data={branchAnalytics.map(b => ({
+                  name: b.shopName,
+                  value: b.actualRevenue || 0
+                })).sort((a,b) => b.value - a.value).slice(0, 5)} 
+              />
+            </ChartContainer>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <ChartContainer title="Revenue vs Gap Overview">
               <RevenueDoughnut 
                 data={[
                   { name: 'Actual Revenue', value: summary.totalRevenue || 0 },
@@ -515,8 +530,14 @@ export const SuperAdminDashboard = () => {
                   dataIndex: "shopName",
                   key: "shopName",
                   width: "25%",
-                  render: (value) => (
-                    <span style={{ fontWeight: "600", color: "#1e293b" }}>{value}</span>
+                  render: (value, record, index) => (
+                    <div className="flex items-center gap-2">
+                      <div className={`w-2.5 h-2.5 rounded-full ${record.actualRevenue >= record.expectedRevenue * 0.9 ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]' : 'bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.6)]'}`}></div>
+                      <span style={{ fontWeight: "600", color: "#1e293b" }}>{value}</span>
+                      {index === 0 && (
+                        <Tag color="gold" className="ml-1 border-none font-bold text-[10px] uppercase">Top Performer</Tag>
+                      )}
+                    </div>
                   ),
                 },
                 {
@@ -865,6 +886,47 @@ export const SuperAdminDashboard = () => {
             </div>
           </div>
 
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            {/* Top Performing Product */}
+            <AntCard styles={{ body: compactCardBodyStyle }} style={statsPanelStyle} hoverable>
+              <Statistic
+                title={<span style={{ color: "#16a34a", fontWeight: 700 }}>Top Product</span>}
+                value={branchReport.topPerformingProduct?.productName || "N/A"}
+                styles={{ content: { color: "#1e293b", fontSize: "1.2rem", fontWeight: "700" } }}
+              />
+              <div className="mt-2 text-sm">
+                <span className="font-semibold text-green-600">{formatCurrency(branchReport.topPerformingProduct?.revenue || 0)}</span>
+                <span className="text-slate-500 ml-1">({branchReport.topPerformingProduct?.quantity || 0} sold)</span>
+              </div>
+            </AntCard>
+
+            {/* Average Performing Product */}
+            <AntCard styles={{ body: compactCardBodyStyle }} style={statsPanelStyle} hoverable>
+              <Statistic
+                title={<span style={{ color: "#2563eb", fontWeight: 700 }}>Avg Product</span>}
+                value={branchReport.avgPerformingProduct?.productName || "N/A"}
+                styles={{ content: { color: "#1e293b", fontSize: "1.2rem", fontWeight: "700" } }}
+              />
+              <div className="mt-2 text-sm">
+                <span className="font-semibold text-blue-600">{formatCurrency(branchReport.avgPerformingProduct?.revenue || 0)}</span>
+                <span className="text-slate-500 ml-1">({branchReport.avgPerformingProduct?.quantity || 0} sold)</span>
+              </div>
+            </AntCard>
+
+            {/* Less Performing Product */}
+            <AntCard styles={{ body: compactCardBodyStyle }} style={statsPanelStyle} hoverable>
+              <Statistic
+                title={<span style={{ color: "#ea580c", fontWeight: 700 }}>Less Product</span>}
+                value={branchReport.lessPerformingProduct?.productName || "N/A"}
+                styles={{ content: { color: "#1e293b", fontSize: "1.2rem", fontWeight: "700" } }}
+              />
+              <div className="mt-2 text-sm">
+                <span className="font-semibold text-orange-600">{formatCurrency(branchReport.lessPerformingProduct?.revenue || 0)}</span>
+                <span className="text-slate-500 ml-1">({branchReport.lessPerformingProduct?.quantity || 0} sold)</span>
+              </div>
+            </AntCard>
+          </div>
+
           <AntCard
             title={
               <span style={{ fontSize: "16px", fontWeight: "700", color: "#0f172a" }}>
@@ -1017,6 +1079,42 @@ export const SuperAdminDashboard = () => {
                 styles={{ content: { color: "#ef4444", fontSize: "1.3rem", fontWeight: "800" } }}
               />
             </AntCard>
+          </div>
+        </div>
+      )}
+      {activeTab === 4 && (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <ChartContainer title="Sales Share by Category" height={400}>
+              <RevenueDoughnut 
+                data={Object.entries(
+                  dashboardData.productDistribution.reduce((acc, p) => {
+                    acc[p.category] = (acc[p.category] || 0) + p.totalRevenue;
+                    return acc;
+                  }, {})
+                ).map(([name, value]) => ({ name, value }))} 
+              />
+            </ChartContainer>
+
+            <ChartContainer title="Payment Method Breakdown" height={400}>
+              <RevenueDoughnut 
+                data={dashboardData.paymentMethods || []} 
+              />
+            </ChartContainer>
+          </div>
+
+          <ChartContainer title="Detailed Sales Growth (Daily)" height={450}>
+            <RevenueTrendChart data={dashboardData.dailyTrends || []} />
+          </ChartContainer>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <ChartContainer title="Product Revenue vs Quantity (Top 10)" height={400}>
+              <ProductRevenueChart data={dashboardData.productDistribution || []} />
+            </ChartContainer>
+
+            <ChartContainer title="Branch Profit/Loss Distribution" height={400}>
+              <BranchPerformanceChart data={dashboardData.branchAnalytics || []} />
+            </ChartContainer>
           </div>
         </div>
       )}

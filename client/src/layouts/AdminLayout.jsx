@@ -1,5 +1,6 @@
 import { Navbar } from '../components/common/Navbar.jsx';
 import { Sidebar } from '../components/common/Sidebar.jsx';
+import { StockDiscrepancies } from '../pages/admin/StockDiscrepancies.jsx';
 
 export const AdminLayout = ({ children }) => {
   return (

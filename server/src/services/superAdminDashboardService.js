@@ -62,7 +62,8 @@ export const getSuperAdminDashboard = async (options = {}) => {
       returnsSummary,
       staffCount,
       productSummary,
-      inventorySummary
+      inventorySummary,
+      paymentMethodSummary
     ] = await Promise.all([
       // Sales aggregation: much faster than loading all sales
       Sale.aggregate([
@@ -72,7 +73,7 @@ export const getSuperAdminDashboard = async (options = {}) => {
         }},
         {
           $group: {
-            _id: { shopId: "$shopId" },
+            _id: "$shopId",
             totalRevenue: { $sum: "$totalAmount" },
             transactionCount: { $sum: 1 }
           }
@@ -122,16 +123,27 @@ export const getSuperAdminDashboard = async (options = {}) => {
         { $limit: 50 }
       ]),
 
-      // Inventory total value by shop
       Inventory.aggregate([
         { $match: { shopId: { $in: shopIds } } },
         {
           $group: {
             _id: "$shopId",
             totalQuantity: { $sum: "$quantity" },
-            productCount: { $sum: 1 },
-            // Approximate value (we'll refine per shop later)
-            avgPrice: { $avg: "$estimatedPrice" } // Add this field if needed
+            productCount: { $sum: 1 }
+          }
+        }
+      ]),
+      // Payment method breakdown
+      Sale.aggregate([
+        { $match: { 
+          shopId: { $in: shopIds },
+          createdAt: { $gte: start }
+        }},
+        {
+          $group: {
+            _id: "$paymentMethod",
+            revenue: { $sum: "$totalAmount" },
+            count: { $sum: 1 }
           }
         }
       ])
@@ -139,24 +151,48 @@ export const getSuperAdminDashboard = async (options = {}) => {
 
     const totalProductsCount = await Product.countDocuments({});
 
-    // Convert aggregation results to maps (much lighter)
-    const salesByShopMap = new Map(salesSummary.map(s => [s._id.shopId.toString(), {
-      totalRevenue: s.totalRevenue || 0,
-      transactionCount: s.transactionCount || 0
-    }]));
+    // Convert aggregation results to maps with null safety
+    const salesByShopMap = new Map();
+    for (const s of salesSummary) {
+      if (s && s._id) {
+        salesByShopMap.set(s._id.toString(), {
+          totalRevenue: s.totalRevenue || 0,
+          transactionCount: s.transactionCount || 0
+        });
+      }
+    }
 
-    const returnsByShopMap = new Map(returnsSummary.map(r => [r._id.toString(), {
-      totalReturns: r.totalReturns || 0,
-      totalRefund: r.totalRefund || 0
-    }]));
+    const returnsByShopMap = new Map();
+    for (const r of returnsSummary) {
+      if (r && r._id) {
+        returnsByShopMap.set(r._id.toString(), {
+          totalReturns: r.totalReturns || 0,
+          totalRefund: r.totalRefund || 0
+        });
+      }
+    }
 
-    const staffByShopMap = new Map(staffCount.map(s => [s._id.toString(), s.staffCount || 0]));
-    const inventoryByShopMap = new Map(inventorySummary.map(i => [i._id.toString(), i]));
+    const staffByShopMap = new Map();
+    for (const s of staffCount) {
+      if (s && s._id) {
+        staffByShopMap.set(s._id.toString(), s.staffCount || 0);
+      }
+    }
+
+    const inventoryByShopMap = new Map();
+    for (const i of inventorySummary) {
+      if (i && i._id) {
+        inventoryByShopMap.set(i._id.toString(), i);
+      }
+    }
 
     // Get top products only (limit processing)
-    const productPriceMap = new Map(
-      productSummary.map(p => [p._id.toString(), p.price || 0])
-    );
+    const productPriceMap = new Map();
+    for (const p of productSummary) {
+      if (p && p._id) {
+        productPriceMap.set(p._id.toString(), p.price || 0);
+      }
+    }
 
     // BRANCH ANALYTICS using aggregation data
     const branchAnalytics = shops.map((shop) => {
@@ -335,6 +371,12 @@ export const getSuperAdminDashboard = async (options = {}) => {
       },
       branchAnalytics,
       productDistribution,
+      dailyTrends: await getDailyTrends(start, end, selectedBranches),
+      paymentMethods: paymentMethodSummary.map(p => ({
+        name: p._id === 'split' ? 'Cash + UPI' : (p._id ? p._id.toUpperCase() : 'N/A'),
+        value: p.revenue || 0,
+        count: p.count || 0
+      })),
       shops: shops.slice(0, limit),
     };
   } catch (err) {
@@ -362,6 +404,49 @@ export const getBranchReport = async (shopId) => {
     0
   );
 
+  // Calculate Product Performance
+  const productPerformanceMap = {};
+
+  // Track all inventory items (including those with 0 sales)
+  inventory.forEach(inv => {
+    if (inv.productId) {
+      productPerformanceMap[inv.productId._id.toString()] = {
+        productName: inv.productId.name,
+        revenue: 0,
+        quantity: 0
+      };
+    }
+  });
+
+  // Aggregate actual sales
+  sales.forEach(sale => {
+    sale.items?.forEach(item => {
+      const pId = item.productId?.toString();
+      if (!pId) return;
+      if (!productPerformanceMap[pId]) {
+        productPerformanceMap[pId] = {
+          productName: item.productName || "Unknown",
+          revenue: 0,
+          quantity: 0
+        };
+      }
+      productPerformanceMap[pId].revenue += (item.subtotal || (item.price * item.quantity) || 0);
+      productPerformanceMap[pId].quantity += (item.quantity || 0);
+    });
+  });
+
+  const sortedProducts = Object.values(productPerformanceMap).sort((a, b) => b.revenue - a.revenue);
+  
+  let topPerformingProduct = null;
+  let avgPerformingProduct = null;
+  let lessPerformingProduct = null;
+
+  if (sortedProducts.length > 0) {
+    topPerformingProduct = sortedProducts[0];
+    lessPerformingProduct = sortedProducts[sortedProducts.length - 1];
+    avgPerformingProduct = sortedProducts[Math.floor(sortedProducts.length / 2)];
+  }
+
   return {
     branch: shop,
     sales,
@@ -374,6 +459,9 @@ export const getBranchReport = async (shopId) => {
     ),
     returns: returns.length,
     returnValue: returns.reduce((s, r) => s + (r.totalRefund || 0), 0),
+    topPerformingProduct,
+    avgPerformingProduct,
+    lessPerformingProduct
   };
 };
 
@@ -398,4 +486,41 @@ export const getRevenueTrends = async (startDate, endDate) => {
       transactions: shopSales.length,
     };
   });
+};
+
+/* =========================
+   DAILY REVENUE TRENDS (NEW)
+========================= */
+export const getDailyTrends = async (startDate, endDate, selectedBranches = []) => {
+  const match = {
+    createdAt: { $gte: startDate, $lte: endDate },
+    paymentStatus: "completed"
+  };
+
+  if (selectedBranches && selectedBranches.length > 0) {
+    const branchObjectIds = selectedBranches.map(id => new mongoose.Types.ObjectId(id));
+    match.shopId = { $in: branchObjectIds };
+  }
+
+  const trends = await Sale.aggregate([
+    { $match: match },
+    {
+      $group: {
+        _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+        revenue: { $sum: "$totalAmount" },
+        count: { $sum: 1 }
+      }
+    },
+    { $sort: { _id: 1 } },
+    {
+      $project: {
+        date: "$_id",
+        revenue: 1,
+        count: 1,
+        _id: 0
+      }
+    }
+  ]);
+
+  return trends;
 };

@@ -16,6 +16,11 @@ export const Reports = () => {
     startDate: "",
     endDate: ""
   });
+  const [appliedFilters, setAppliedFilters] = useState({
+    shop: "all",
+    startDate: "",
+    endDate: ""
+  });
 
   useEffect(() => {
     fetchReports();
@@ -36,7 +41,7 @@ export const Reports = () => {
       sales.forEach((sale) => {
         const shopId = sale.shopId?._id || sale.shopId;
         const shopName = sale.shopId?.name || "Unknown Shop";
-        
+
         if (!performance[shopId]) {
           performance[shopId] = {
             shopId,
@@ -68,24 +73,46 @@ export const Reports = () => {
     }
   };
 
+  const handleApplyFilters = () => {
+    setAppliedFilters({
+      shop: selectedShop,
+      startDate: dateRange.startDate,
+      endDate: dateRange.endDate
+    });
+  };
+
+  const handleResetFilters = () => {
+    setSelectedShop("all");
+    setDateRange({ startDate: "", endDate: "" });
+    setAppliedFilters({
+      shop: "all",
+      startDate: "",
+      endDate: ""
+    });
+  };
+
   const getFilteredSales = () => {
     let filtered = allSales;
 
-    if (selectedShop !== "all") {
+    if (appliedFilters.shop !== "all") {
       filtered = filtered.filter(
-        (sale) => (sale.shopId?._id || sale.shopId) === selectedShop
+        (sale) => (sale.shopId?._id || sale.shopId) === appliedFilters.shop
       );
     }
 
-    if (dateRange.startDate) {
+    if (appliedFilters.startDate) {
+      const start = new Date(appliedFilters.startDate);
+      start.setHours(0, 0, 0, 0);
       filtered = filtered.filter(
-        (sale) => new Date(sale.createdAt) >= new Date(dateRange.startDate)
+        (sale) => new Date(sale.createdAt) >= start
       );
     }
 
-    if (dateRange.endDate) {
+    if (appliedFilters.endDate) {
+      const end = new Date(appliedFilters.endDate);
+      end.setHours(23, 59, 59, 999);
       filtered = filtered.filter(
-        (sale) => new Date(sale.createdAt) <= new Date(dateRange.endDate)
+        (sale) => new Date(sale.createdAt) <= end
       );
     }
 
@@ -150,15 +177,15 @@ export const Reports = () => {
           {/* Sales Report */}
           <Card className="bg-white">
             <h2 className="text-xl font-bold mb-4">Sales Report</h2>
-            
+
             {allSales.length === 0 ? (
               <div className="text-center py-8">
                 <p className="text-gray-500">No sales reported yet. Sales will appear once transactions are processed.</p>
               </div>
             ) : (
               <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  <div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 items-end">
+                  <div className="md:col-span-1">
                     <label className="block text-sm font-medium mb-1 text-gray-700">Shop</label>
                     <select
                       value={selectedShop}
@@ -173,7 +200,7 @@ export const Reports = () => {
                       ))}
                     </select>
                   </div>
-                  <div>
+                  <div className="md:col-span-1">
                     <label className="block text-sm font-medium mb-1 text-gray-700">Start Date</label>
                     <input
                       type="date"
@@ -182,7 +209,7 @@ export const Reports = () => {
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
-                  <div>
+                  <div className="md:col-span-1">
                     <label className="block text-sm font-medium mb-1 text-gray-700">End Date</label>
                     <input
                       type="date"
@@ -190,6 +217,22 @@ export const Reports = () => {
                       onChange={(e) => setDateRange(prev => ({ ...prev, endDate: e.target.value }))}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                     />
+                  </div>
+                  <div className="md:col-span-1">
+                    <button
+                      onClick={handleApplyFilters}
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition shadow-md"
+                    >
+                      Apply Filters
+                    </button>
+                  </div>
+                  <div className="md:col-span-1">
+                    <button
+                      onClick={handleResetFilters}
+                      className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-2 px-4 rounded-lg transition"
+                    >
+                      Reset
+                    </button>
                   </div>
                 </div>
 
@@ -218,7 +261,8 @@ export const Reports = () => {
                           <tr>
                             <th className="px-4 py-2 text-left">Bill No</th>
                             <th className="px-4 py-2 text-left">Shop</th>
-                            <th className="px-4 py-2 text-left">Items</th>
+                            <th className="px-4 py-2 text-left">Staff</th>
+                            <th className="px-4 py-2 text-left">Items (Shop-wise)</th>
                             <th className="px-4 py-2 text-left">Amount</th>
                             <th className="px-4 py-2 text-left">Payment</th>
                             <th className="px-4 py-2 text-left">Date</th>
@@ -229,10 +273,31 @@ export const Reports = () => {
                             <tr key={sale._id} className="hover:bg-gray-50">
                               <td className="px-4 py-2 font-medium">{sale.billNo}</td>
                               <td className="px-4 py-2">{sale.shopId?.name || "---"}</td>
-                              <td className="px-4 py-2">{sale.items?.length || 0}</td>
+                              <td className="px-4 py-2">
+                                <div className="flex flex-col">
+                                  <span className="font-medium">{sale.staffId?.name || "Owner"}</span>
+                                  <span className="text-[10px] text-gray-400 font-bold uppercase">{sale.shift === "morning" ? "Morning" : "Evening"}</span>
+                                </div>
+                              </td>
+                              <td className="px-4 py-2 max-w-xs">
+                                {(() => {
+                                  if (!sale.items || sale.items.length === 0) return '0';
+
+                                  if (sale.items.length === 1) {
+                                    return `${sale.items[0].productName || 'Item'} x${sale.items[0].quantity || 1}`;
+                                  }
+
+                                  const itemNames = sale.items.map(item =>
+                                    `${item.productName || 'Item'} x${item.quantity || 1}`
+                                  ).join(', ');
+                                  return itemNames;
+                                })()}
+                              </td>
                               <td className="px-4 py-2 font-semibold">{formatCurrency(sale.totalAmount)}</td>
                               <td className="px-4 py-2">
-                                <Badge variant="primary">{sale.paymentMethod || "Cash"}</Badge>
+                                <Badge variant="primary">
+                                  {sale.paymentMethod?.toLowerCase() === "split" ? "cash + UPI" : (sale.paymentMethod || "cash")}
+                                </Badge>
                               </td>
                               <td className="px-4 py-2 text-gray-600">{formatDate(sale.createdAt)}</td>
                             </tr>

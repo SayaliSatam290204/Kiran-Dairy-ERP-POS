@@ -2,9 +2,12 @@ import Dispatch from '../models/Dispatch.js';
 import { generateDispatchNo } from '../utils/generateDispatchNo.js';
 import { inventoryService } from '../services/inventoryService.js';
 import { dispatchAnalyticsService } from '../services/dispatchAnalyticsService.js';
+import { discrepancyController } from './dispatchDiscrepancyController.js';
+import StockDiscrepancy from '../models/StockDiscrepancy.js';
 import { responseHelper } from '../utils/responseHelper.js';
 
 export const dispatchController = {
+  ...discrepancyController,
   create: async (req, res) => {
     try {
       const { shopId, shopIds, items, isBatchDispatch } = req.body;
@@ -137,7 +140,7 @@ export const dispatchController = {
       const { status, receivedNotes, confirmedBy } = req.body;
 
       // Validate status
-      const validStatuses = ['created', 'dispatched', 'received', 'pending'];
+      const validStatuses = ['created', 'dispatched', 'received', 'pending', 'rejected'];
       if (!validStatuses.includes(status)) {
         return responseHelper.error(res, 'Invalid dispatch status', 400);
       }
@@ -153,6 +156,14 @@ export const dispatchController = {
       // If marking as dispatched, set dispatchedDate
       if (status === 'dispatched' && !dispatch.dispatchedDate) {
         dispatch.dispatchedDate = new Date();
+      }
+
+      // If marking as rejected, set receivedDate (as rejection date) and notes
+      if (status === 'rejected') {
+        if (!dispatch.receivedDate) dispatch.receivedDate = new Date();
+        if (receivedNotes) dispatch.receivedNotes = receivedNotes;
+        if (confirmedBy || req.user?.id) dispatch.confirmedBy = confirmedBy || req.user.id;
+        // Do NOT update inventory on rejection
       }
 
       // If marking as received, set receivedDate and calculate delivery time

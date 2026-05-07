@@ -104,7 +104,7 @@ return responseHelper.error(res, error.message, 500);
         return responseHelper.error(res, 'Unauthorized access', 403);
       }
 
-      // Check if payment already exists for this month (only for non-advance payments)
+// Check if payment already exists for this month (only for non-advance payments)
       if (!isAdvance) {
         const existingPayment = await StaffPayment.findOne({
           staffId,
@@ -115,6 +115,9 @@ return responseHelper.error(res, error.message, 500);
         if (existingPayment) {
           return responseHelper.error(res, 'Payment already exists for this month', 400);
         }
+
+        // Auto-default amount = staff.baseSalary for regular payment
+        amount = staff.baseSalary;
       }
 
 // Handle advance payment vs regular salary payment

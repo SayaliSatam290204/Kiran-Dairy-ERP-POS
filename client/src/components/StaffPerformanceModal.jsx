@@ -36,10 +36,10 @@ const MetricTable = ({ rows, variant = 'neutral' }) => (
         <tbody className="divide-y divide-slate-100 bg-white">
           {rows.map((row) => (
             <tr key={row.label} className="hover:bg-slate-50">
-              <td className={`w-1/2 px-4 py-3 font-semibold ${
+              <td className={`w-1/3 px-4 py-3 font-semibold ${
                 variant === 'staff' ? 'text-indigo-700' : 'text-slate-700'
               }`}>{row.label}</td>
-              <td className={`px-4 py-3 text-right font-medium ${
+              <td className={`w-2/3 px-4 py-3 text-right font-medium break-all ${
                 variant === 'staff' ? 'text-indigo-900' :
                 variant === 'performance' ? 'text-emerald-700' : 'text-slate-900'
               }`}>{row.value}</td>
@@ -61,7 +61,7 @@ const MetricTable = ({ rows, variant = 'neutral' }) => (
     { label: "Staff Name", value: staff.name || "N/A" },
     { label: "Email", value: staff.email || "N/A" },
     { label: "Phone", value: staff.phone || "N/A" },
-    { label: "Base Salary", value: formatCurrency(staff.baseSalary || 0) },
+    { label: "Base Salary", value: staff.role === 'superAdmin' ? formatCurrency(staff.baseSalary || 0) : '***' , className: "text-emerald-700 font-bold" },
   ];
 
   const weeklyRows = [

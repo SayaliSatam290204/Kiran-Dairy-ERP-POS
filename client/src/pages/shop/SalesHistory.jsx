@@ -30,16 +30,35 @@ export const SalesHistory = () => {
 
   const columns = [
     { key: "billNo", label: "Bill No" },
+    { 
+      key: "staffId", 
+      label: "Staff / Shift", 
+      render: (val, row) => (
+        <div className="flex flex-col">
+          <span className="font-semibold text-gray-800">{val?.name || "Shop Owner"}</span>
+          <span className="text-[10px] text-gray-500 uppercase font-bold tracking-tight">
+            {row.shift === "morning" ? "☀️ Morning" : "🌙 Evening"}
+          </span>
+        </div>
+      )
+    },
+    {
+      key: "items",
+      label: "Items",
+      render: (_, row) => {
+        if (!row.items || row.items.length === 0) return "-";
+        return row.items.map(item => `${item.productName || 'Item'} x${item.quantity || 1}`).join(", ");
+      }
+    },
     { key: "totalAmount", label: "Amount", render: (val) => formatCurrency(val || 0) },
     {
       key: "paymentMethod",
       label: "Payment",
       render: (val) => {
         const p = String(val || "").toLowerCase();
-        const v = p === "cash" ? "green" : p === "card" ? "blue" : p === "online" ? "purple" : "gray";
-        // Badge supports only gray/green/red/blue in our component. Use blue for all non-cash:
-        const finalVariant = p === "cash" ? "green" : "blue";
-        return <Badge variant={finalVariant}>{String(val || "-").toUpperCase()}</Badge>;
+        const displayVal = p === "split" ? "cash + UPI" : val;
+        const finalVariant = (p === "cash" || p === "cash + upi") ? "green" : "blue";
+        return <Badge variant={finalVariant}>{String(displayVal || "-").toUpperCase()}</Badge>;
       },
     },
     { key: "saleDate", label: "Date", render: (val) => formatDate(val) },

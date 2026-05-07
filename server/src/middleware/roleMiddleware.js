@@ -1,6 +1,16 @@
 export const roleMiddleware = (allowedRoles) => {
   const roles = Array.isArray(allowedRoles) ? allowedRoles : [allowedRoles];
 
+  // canViewSalary middleware
+  if (allowedRoles === 'canViewSalary') {
+    return (req, res, next) => {
+      if (req.user.role !== 'superAdmin') {
+        return res.status(403).json({ message: "SuperAdmin access required to view salary" });
+      }
+      next();
+    };
+  }
+
   return (req, res, next) => {
     if (!req.user) return res.status(401).json({ message: "User not authenticated" });
 

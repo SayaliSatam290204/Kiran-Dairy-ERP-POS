@@ -6,6 +6,13 @@ const staffSchema = new mongoose.Schema(
       type: String,
       required: true
     },
+    
+    // Hide salary via populate select for non-superAdmin
+    baseSalary: {
+      type: Number,
+      required: true,
+      select: false  // Hide by default
+    },
     email: {
       type: String,
       required: true,
@@ -25,11 +32,6 @@ const staffSchema = new mongoose.Schema(
       enum: ['morning', 'evening'],
       default: ['morning']
     },
-    baseSalary: {
-      type: Number,
-      required: true,
-      description: 'Monthly base salary'
-    },
     status: {
       type: String,
       enum: ['active', 'inactive', 'suspended'],
@@ -48,17 +50,26 @@ const staffSchema = new mongoose.Schema(
       type: String,
       default: ''
     },
-isActive: {
+    isActive: {
       type: Boolean,
       default: true
     },
     advanceBalance: {
       type: Number,
-      default: 0,
-      description: 'Total amount of money the staff member owes the company as advance'
+      default: 0
     }
   },
-  { timestamps: true }
+  {
+    timestamps: true
+  }
 );
+
+staffSchema.virtual('perfMetrics').get(function() {
+  return {
+    weeklySales: this.weeklyPerformance?.totalSales || 0,
+    monthlyRevenue: this.monthlyPerformance?.totalAmount || 0,
+    avgRating: this.performanceRating || 0
+  };
+});
 
 export default mongoose.model('Staff', staffSchema);

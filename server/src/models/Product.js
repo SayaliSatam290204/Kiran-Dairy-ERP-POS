@@ -71,6 +71,18 @@ const productSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    shopPrices: [{
+      shopId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Shop',
+        required: true
+      },
+      price: {
+        type: Number,
+        required: true,
+        min: 0
+      }
+    }],
   },
   { timestamps: true }
 );

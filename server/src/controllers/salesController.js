@@ -10,8 +10,17 @@ export const salesController = {
   // Create a new sale and update inventory
   create: async (req, res) => {
     try {
-      const { items, totalAmount, paymentMethod, paymentDetails } = req.body;
+      const { items, totalAmount, paymentMethod, paymentDetails, staffId, shift } = req.body;
       const shopId = req.user?.shopId;
+
+      // 🔍 DETAILED DEBUG LOGGING
+      console.log('[SALE CREATE] Request body:', { items: items?.length, totalAmount, paymentMethod });
+      console.log('[SALE CREATE] req.user:', { id: req.user?.id, role: req.user?.role, shopId: req.user?.shopId ? req.user.shopId.toString() : null });
+
+      if (!req.user) {
+        console.error('[SALE CREATE ERROR] No authenticated user');
+        return responseHelper.error(res, 'Authentication required', 401);
+      }
 
       // Validate input
       if (!items || items.length === 0 || !totalAmount || !paymentMethod) {
@@ -19,8 +28,11 @@ export const salesController = {
       }
 
       if (!shopId) {
-        return responseHelper.error(res, 'Shop ID not found in user session', 400);
+        console.error('[SALE CREATE ERROR] Missing shopId in user session. User:', req.user.id);
+        return responseHelper.error(res, 'Shop not assigned to user. Contact admin.', 403);
       }
+
+      console.log('[SALE CREATE] Shop validation passed. Proceeding...');
 
       // Validate split payment amounts if applicable
       if (paymentMethod === 'split' && paymentDetails) {
@@ -44,6 +56,13 @@ export const salesController = {
         const inventory = await Inventory.findOne({
           shopId,
           productId: item.productId
+        }).populate('productId', 'name');
+
+        console.log(`[SALE STOCK CHECK] Product ${item.productId}:`, {
+          found: !!inventory,
+          available: inventory?.quantity,
+          requested: item.quantity,
+          productName: inventory?.productId?.name || item.productName
         });
 
         const availableQty = inventory?.quantity || 0;
@@ -69,6 +88,8 @@ export const salesController = {
       const sale = new Sale({
         billNo,
         shopId,
+        staffId: staffId || null,
+        shift: shift || 'morning',
         items: processedItems,
         totalAmount,
         paymentMethod,
@@ -118,6 +139,7 @@ export const salesController = {
       const sales = await Sale.find({ shopId })
         .populate('shopId', 'name location address contactNo ownerName')
         .populate('items.productId', 'name sku price category')
+        .populate('staffId', 'name')
         .sort('-saleDate')
         .limit(100);
 
@@ -180,13 +202,15 @@ export const salesController = {
       const sales = await Sale.find()
         .populate('shopId', 'name location address contactNo ownerName')
         .populate('items.productId', 'name sku price category')
+        .populate('staffId', 'name')
         .sort('-saleDate')
         .limit(200);
 
       responseHelper.success(res, sales, 'All sales fetched successfully');
     } catch (error) {
       console.error('Error fetching all sales:', error);
-      responseHelper.error(res, 'Failed to fetch sales', 500);
+      responseHelper.error(res, 'Failed to create sale', 500);
     }
   }
 };
+

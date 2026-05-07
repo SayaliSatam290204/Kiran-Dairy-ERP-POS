@@ -12,5 +12,6 @@ router.get("/staff-performance", authMiddleware, shopController.getStaffPerforma
 // ✅ SAFE (no crash even if logic not ready)
 router.get("/staff-performance/:staffId", authMiddleware, shopController.getStaffDetailedPerformance);
 router.get("/preview", shopController.getPreviewData);
+router.get("/products", authMiddleware, shopController.getProducts);
 
 export default router;

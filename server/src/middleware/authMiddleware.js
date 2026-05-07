@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+import StockDiscrepancy from "../models/StockDiscrepancy.js";
 
 export const authMiddleware = (req, res, next) => {
   try {
@@ -17,7 +18,20 @@ export const authMiddleware = (req, res, next) => {
     }
     
     req.user = decoded;
+    
     next();
+    
+    // Add alert counts for dashboard/sidebar - run async after auth, non-blocking
+    if (req.user.role === 'admin') {
+      (async () => {
+        try {
+          const pendingDiscrepancies = await StockDiscrepancy.countDocuments({ status: 'pending' });
+          req.user.pendingDiscrepancies = pendingDiscrepancies;
+        } catch (err) {
+          console.error('Failed to fetch pending discrepancies count:', err);
+        }
+      })();
+    }
   } catch (error) {
     console.log("[Auth Error] Token verification failed:", error.message);
     return res.status(401).json({ 

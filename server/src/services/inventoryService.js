@@ -11,7 +11,7 @@ export const inventoryService = {
       if (typeof quantity !== "number" || isNaN(quantity)) {
         throw new Error("quantity must be a valid number");
       }
-      if (!["dispatch_in", "received", "sale_out", "return_in", "return_out", "return_reversal", "adjustment"].includes(transactionType)) {
+if (!["dispatch_in", "received", "sale_out", "return_in", "return_out", "return_reversal", "adjustment", "discrepancy_adjust"].includes(transactionType)) {
         throw new Error(`Invalid transactionType: ${transactionType}`);
       }
 

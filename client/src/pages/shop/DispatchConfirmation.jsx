@@ -16,9 +16,12 @@ export const DispatchConfirmation = () => {
   const [loading, setLoading] = useState(true);
   const [selectedDispatch, setSelectedDispatch] = useState(null);
   const [confirmModal, setConfirmModal] = useState(false);
+  const [rejectModal, setRejectModal] = useState(false);
   const [receivedNotes, setReceivedNotes] = useState("");
+  const [rejectNotes, setRejectNotes] = useState("");
   const [confirming, setConfirming] = useState(false);
-  const [filter, setFilter] = useState("all"); // all, pending, received
+  const [rejecting, setRejecting] = useState(false);
+  const [filter, setFilter] = useState("all"); // all, pending, received, rejected
 
   useEffect(() => {
     fetchDispatches();
@@ -43,6 +46,8 @@ export const DispatchConfirmation = () => {
     switch (status?.toLowerCase()) {
       case "received":
         return "green";
+      case "rejected":
+        return "red";
       case "dispatched":
         return "blue";
       case "pending":
@@ -81,12 +86,44 @@ export const DispatchConfirmation = () => {
     }
   };
 
+  const handleRejectDispatch = async () => {
+    if (!selectedDispatch) return;
+    if (!rejectNotes.trim()) {
+      toast.error("Please provide a reason for rejection in the notes.");
+      return;
+    }
+
+    try {
+      setRejecting(true);
+      await dispatchApi.updateStatus(selectedDispatch._id, {
+        status: "rejected",
+        receivedNotes: rejectNotes,
+        confirmedBy: user?.id
+      });
+
+      toast.success("Dispatch has been rejected.");
+      setRejectModal(false);
+      setRejectNotes("");
+      setSelectedDispatch(null);
+      await fetchDispatches();
+    } catch (error) {
+      console.error("Failed to reject dispatch:", error);
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to reject dispatch"
+      );
+    } finally {
+      setRejecting(false);
+    }
+  };
+
   const filteredDispatches = dispatches.filter((dispatch) => {
     if (filter === "all") return true;
     if (filter === "pending")
       return dispatch.status !== "received" &&
         dispatch.status !== "rejected";
     if (filter === "received") return dispatch.status === "received";
+    if (filter === "rejected") return dispatch.status === "rejected";
     return true;
   });
 
@@ -94,6 +131,7 @@ export const DispatchConfirmation = () => {
     (d) => d.status !== "received" && d.status !== "rejected"
   ).length;
   const receivedCount = dispatches.filter((d) => d.status === "received").length;
+  const rejectedCount = dispatches.filter((d) => d.status === "rejected").length;
 
   return (
     <div className="space-y-6">
@@ -166,6 +204,16 @@ export const DispatchConfirmation = () => {
             }`}
           >
             Received ({receivedCount})
+          </button>
+          <button
+            onClick={() => setFilter("rejected")}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              filter === "rejected"
+                ? "bg-red-600 text-white"
+                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+            }`}
+          >
+            Rejected ({rejectedCount})
           </button>
         </div>
 
@@ -288,22 +336,38 @@ export const DispatchConfirmation = () => {
                   </div>
 
                   {/* Action Button */}
-                  <div className="ml-4">
+                  <div className="ml-4 flex flex-col gap-2">
                     {dispatch.status !== "received" &&
                       dispatch.status !== "rejected" && (
-                        <Button
-                          onClick={() => {
-                            setSelectedDispatch(dispatch);
-                            setConfirmModal(true);
-                          }}
-                          className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 text-sm"
-                        >
-                          Confirm Receipt
-                        </Button>
+                        <>
+                          <Button
+                            onClick={() => {
+                              setSelectedDispatch(dispatch);
+                              setConfirmModal(true);
+                            }}
+                            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 text-sm"
+                          >
+                            Confirm Receipt
+                          </Button>
+                          <Button
+                            onClick={() => {
+                              setSelectedDispatch(dispatch);
+                              setRejectModal(true);
+                            }}
+                            className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 text-sm"
+                          >
+                            Reject Dispatch
+                          </Button>
+                        </>
                       )}
                     {dispatch.status === "received" && (
                       <div className="text-center">
                         <Badge variant="green">Confirmed</Badge>
+                      </div>
+                    )}
+                    {dispatch.status === "rejected" && (
+                      <div className="text-center">
+                        <Badge variant="red">Rejected</Badge>
                       </div>
                     )}
                   </div>
@@ -369,6 +433,67 @@ export const DispatchConfirmation = () => {
                 disabled={confirming}
               >
                 {confirming ? "Confirming..." : "Confirm Receipt"}
+              </Button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* Rejection Modal */}
+      <Modal
+        isOpen={rejectModal}
+        onClose={() => {
+          setRejectModal(false);
+          setRejectNotes("");
+          setSelectedDispatch(null);
+        }}
+        title="Reject Dispatch"
+      >
+        {selectedDispatch && (
+          <div className="space-y-4">
+            <div>
+              <p className="text-sm text-gray-600">
+                <span className="font-semibold text-gray-900">
+                  Dispatch No:
+                </span>{" "}
+                {selectedDispatch.dispatchNo}
+              </p>
+              <p className="text-sm text-gray-600 mt-1">
+                <span className="font-semibold text-gray-900">Items:</span>{" "}
+                {selectedDispatch.items.length} product(s)
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Rejection Reason (Required)
+              </label>
+              <textarea
+                value={rejectNotes}
+                onChange={(e) => setRejectNotes(e.target.value)}
+                placeholder="Why are you rejecting this dispatch? (e.g. Items missing, wrong branch)"
+                className="w-full border border-gray-300 rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                rows="4"
+              />
+            </div>
+
+            <div className="flex gap-3 justify-end">
+              <Button
+                onClick={() => {
+                  setRejectModal(false);
+                  setRejectNotes("");
+                }}
+                className="bg-gray-300 hover:bg-gray-400 text-gray-900 px-4 py-2"
+                disabled={rejecting}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleRejectDispatch}
+                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2"
+                disabled={rejecting || !rejectNotes.trim()}
+              >
+                {rejecting ? "Rejecting..." : "Reject Dispatch"}
               </Button>
             </div>
           </div>

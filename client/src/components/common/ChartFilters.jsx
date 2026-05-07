@@ -54,8 +54,27 @@ export const ChartFilters = ({
     onFiltersChange(resetFilters);
   };
 
+  const quickButtons = [
+    { label: 'Today', onClick: () => handleQuickFilter([dayjs(), dayjs()]) },
+    { label: 'Yesterday', onClick: () => handleQuickFilter([dayjs().subtract(1, 'day'), dayjs().subtract(1, 'day')]) },
+    { label: 'Tomorrow', onClick: () => handleQuickFilter([dayjs().add(1, 'day'), dayjs().add(1, 'day')]) },
+  ];
+
+  const handleQuickFilter = (range) => {
+    const updatedFilters = { ...localFilters, dateRange: range };
+    setLocalFilters(updatedFilters);
+    onFiltersChange(updatedFilters);
+  };
+
   return (
     <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm mb-6">
+      <div className="flex flex-wrap gap-2 mb-4">
+        {quickButtons.map(btn => (
+          <Button key={btn.label} size="sm" variant="outline" onClick={btn.onClick}>
+            {btn.label}
+          </Button>
+        ))}
+      </div>
       <Row gutter={[16, 16]} align="middle">
 
         {/* ✅ Date Range */}

@@ -38,6 +38,7 @@ export const ShopDashboard = () => {
     totalReceivedDispatches: 0
   });
   const [receivedDispatches, setReceivedDispatches] = useState([]);
+  const [discrepancies, setDiscrepancies] = useState([]);
   const [salesHistory, setSalesHistory] = useState([]);
   const [staffPerformance, setStaffPerformance] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -64,6 +65,10 @@ export const ShopDashboard = () => {
         // Fetch received dispatches for "Received Stock Summary"
         const dispatchesResponse = await shopApi.getReceivedDispatches();
         setReceivedDispatches(dispatchesResponse.data.data || []);
+        
+        // Fetch discrepancies
+        const discResponse = await shopApi.getPendingDiscrepancies();
+        setDiscrepancies(discResponse.data.data || []); 
 
         // Fetch sales history
         try {
@@ -183,24 +188,6 @@ export const ShopDashboard = () => {
                 Manage Staff
               </Button>
             </Card>
-
-            {/* Staff Payments Card */}
-            <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <p className="text-sm font-medium text-gray-600 mb-2">Pending Payments</p>
-                  <p className="text-3xl font-bold text-orange-600">₹{stats.pendingPayments}</p>
-                  <p className="text-xs text-gray-500 mt-1">Awaiting payment</p>
-                </div>
-                <FaClipboard className="text-4xl text-orange-400 opacity-30" />
-              </div>
-              <Button
-                onClick={() => navigate('/shop/payment')}
-                className="w-full bg-orange-600 hover:bg-orange-700 text-white text-sm"
-              >
-                Manage Payments
-              </Button>
-            </Card>
           </div>
 
           {/* Quick Actions */}
@@ -220,9 +207,14 @@ export const ShopDashboard = () => {
               </Button>
               <Button
                 onClick={() => navigate('/shop/dispatch')}
-                className="bg-purple-600 hover:bg-purple-700 text-white"
+                className="bg-purple-600 hover:bg-purple-700 text-white relative"
               >
                 ▢ Confirm Dispatch
+                {discrepancies.length > 0 && (
+                  <Badge variant="red" className="absolute -top-2 -right-2 text-xs h-5 w-5 flex items-center justify-center">
+                    {discrepancies.length}
+                  </Badge>
+                )}
               </Button>
               <Button
                 onClick={() => navigate('/shop/returns')}

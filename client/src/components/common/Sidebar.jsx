@@ -21,6 +21,7 @@ import {
 } from "react-icons/fa";
 import { returnApi } from "../../api/returnApi.js";
 import { adminApi } from "../../api/adminApi.js";
+import { shopApi } from "../../api/shopApi.js";
 
 const linkBase = "block px-3 py-2 rounded-md font-medium transition";
 
@@ -81,24 +82,28 @@ export const Sidebar = () => {
     return () => clearInterval(timer);
   }, [isAdmin, lastNotifiedCount]);
 
-  // Fetch stock alert count
+  // Fetch stock alerts and discrepancies count
   useEffect(() => {
     if (!isAdmin) return;
 
     let timer;
 
-    const fetchStockAlerts = async () => {
+    const fetchAlerts = async () => {
       try {
-        const res = await adminApi.getAlertCount();
-        const count = res.data?.data?.criticalCount ?? 0;
-        setAlertCount(count);
+        const [alertRes, discRes] = await Promise.all([
+          adminApi.getAlertCount(),
+          shopApi.getPendingDiscrepancies()
+        ]);
+        const alertCount = alertRes.data?.data?.criticalCount ?? 0;
+        const discCount = discRes.data?.data?.length ?? 0;
+        setAlertCount(alertCount + discCount);
       } catch (e) {
         // silent fail
       }
     };
 
-    fetchStockAlerts();
-    timer = setInterval(fetchStockAlerts, 30000); // every 30 sec
+    fetchAlerts();
+    timer = setInterval(fetchAlerts, 30000); // every 30 sec
 
     return () => clearInterval(timer);
   }, [isAdmin]);
@@ -279,12 +284,6 @@ export const Sidebar = () => {
             </div>
           </NavLink>
 
-          <NavLink to="/shop/payment" className={linkClass}>
-            <div className="flex items-center gap-3">
-              <FaMoneyBillWave className="w-4 h-4" />
-              <span>Staff Payments</span>
-            </div>
-          </NavLink>
         </div>
       )}
     </aside>

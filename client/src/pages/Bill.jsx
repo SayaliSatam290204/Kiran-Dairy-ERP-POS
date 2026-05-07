@@ -50,7 +50,7 @@ export const Bill = ({ billData }) => {
         {/* Bill Info */}
         <div className="flex flex-col gap-1 text-sm mb-4 font-semibold text-gray-800">
           <p>Bill No: {billData.billNo || "-"}</p>
-          <p>Date: {formatDate(billData.saleDate)}</p>
+<p>Date & Time: {formatDateTime(billData.saleDate)}</p>
         </div>
 
         <div className="border-t-2 border-b-2 border-dashed border-gray-400 py-3 mb-4">
@@ -81,7 +81,7 @@ export const Bill = ({ billData }) => {
                     <tr key={idx} className="text-gray-800 border-b border-gray-100 last:border-0">
                       <td className="py-2 align-top">{idx + 1}</td>
                       <td className="py-2 pr-2 align-top">{item.productName || item.productId?.name || "Item"}</td>
-                      <td className="text-center py-2 align-top">{item.quantity || 0}</td>
+                      <td className="text-center py-2 align-top">{item.quantity || 0} {item.unit}</td>
                       <td className="text-right py-2 align-top">{Number(item.price || 0).toFixed(2)}</td>
                       <td className="text-right py-2 align-top">{subtotal.toFixed(2)}</td>
                     </tr>
@@ -125,7 +125,7 @@ export const Bill = ({ billData }) => {
 
         {/* Payment details */}
         <div className="bg-gray-50 p-3 rounded mb-4 text-sm border border-gray-200">
-          {billData.paymentMethod === "split" && billData.paymentDetails ? (
+{billData.paymentMethod === "Cash + UPI" && billData.paymentDetails ? (
             <div>
               <p className="font-bold mb-1 text-gray-900">Payment Breakdown</p>
               {billData.paymentDetails.upi && (

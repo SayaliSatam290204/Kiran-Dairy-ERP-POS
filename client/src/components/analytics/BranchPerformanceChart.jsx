@@ -61,14 +61,7 @@ const BranchPerformanceChart = ({ data = [], selectedBranches = [] }) => {
 
       {/* Tooltip */}
       <Tooltip
-        formatter={(value, name) => [
-          `₹${value.toLocaleString()}`,
-          name === "actual"
-            ? "Actual Revenue"
-            : name === "expected"
-            ? "Expected Revenue"
-            : "Performance Gap",
-        ]}
+        formatter={(value, name) => [`₹${value.toLocaleString()}`, name]}
         labelStyle={{ fontWeight: 600 }}
       />
 
