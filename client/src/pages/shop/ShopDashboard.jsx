@@ -229,8 +229,8 @@ export const ShopDashboard = () => {
           {receivedDispatches.length > 0 && (
             <Card title="Recently Received Stock" className="border-green-200">
               <div className="space-y-4">
-{receivedDispatches.slice(0, 5).map((dispatch) => (
-                  <div key={dispatch._id || dispatch.id} className="border border-green-100 rounded-lg p-4 bg-green-50">
+{receivedDispatches.slice(0, 5).map((dispatch, dIdx) => (
+                  <div key={dispatch._id || dispatch.id || `dispatch-${dIdx}`} className="border border-green-100 rounded-lg p-4 bg-green-50">
                     <div className="flex justify-between items-start mb-3">
                       <div>
                         <p className="font-semibold text-gray-900">
@@ -318,8 +318,8 @@ export const ShopDashboard = () => {
           {staffPerformance?.byShift && staffPerformance.byShift.length > 0 && (
             <Card title="Staff Performance (Monthly by Shift)" className="border-purple-200">
               <div className="space-y-6">
-                {staffPerformance.byShift.map((shift) => (
-                  <div key={shift._id} className="border-l-4 border-purple-500 pl-4 py-2">
+                {staffPerformance.byShift.map((shift, sIdx) => (
+                  <div key={shift._id || `shift-${sIdx}`} className="border-l-4 border-purple-500 pl-4 py-2">
                     <div className="flex items-center justify-between mb-3">
                       <h3 className="font-semibold text-lg text-gray-900 capitalize">
                         {shift.shift} Shift

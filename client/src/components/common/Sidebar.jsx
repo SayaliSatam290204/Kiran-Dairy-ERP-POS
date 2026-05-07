@@ -90,13 +90,18 @@ export const Sidebar = () => {
 
     const fetchAlerts = async () => {
       try {
-        const [alertRes, discRes] = await Promise.all([
+        const [alertRes, discRes, reqRes] = await Promise.all([
           adminApi.getAlertCount(),
-          shopApi.getPendingDiscrepancies()
+          shopApi.getPendingDiscrepancies(),
+          adminApi.getRestockRequests({ status: 'pending' })
         ]);
-        const alertCount = alertRes.data?.data?.criticalCount ?? 0;
+        
+        // totalAlerts includes both critical (<=5) and low stock (<=20)
+        const lowStockCount = alertRes.data?.data?.totalAlerts ?? 0;
         const discCount = discRes.data?.data?.length ?? 0;
-        setAlertCount(alertCount + discCount);
+        const pendingReqCount = reqRes.data?.data?.length ?? 0;
+        
+        setAlertCount(lowStockCount + discCount + pendingReqCount);
       } catch (e) {
         // silent fail
       }

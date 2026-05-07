@@ -35,7 +35,7 @@ export const salesController = {
       console.log('[SALE CREATE] Shop validation passed. Proceeding...');
 
       // Validate split payment amounts if applicable
-      if (paymentMethod === 'split' && paymentDetails) {
+      if ((paymentMethod === 'split' || paymentMethod === 'Cash + UPI') && paymentDetails) {
         let totalPaid = 0;
         Object.keys(paymentDetails).forEach(method => {
           if (paymentDetails[method] && paymentDetails[method].amount) {
