@@ -188,38 +188,65 @@ export const AdminDashboard = () => {
 
           {/* Top Performers */}
           {stats.topPerformers && stats.topPerformers.length > 0 && (
-            <Card title="Top Performers" className="bg-gradient-to-r from-gray-50 to-gray-100">
+            <Card
+            title="Top Performers"
+            className="bg-gradient-to-r from-gray-50 to-gray-100"
+            >
               <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-left py-2 px-2 font-semibold text-gray-700">Name</th>
-                      <th className="text-left py-2 px-2 font-semibold text-gray-700">Shop</th>
-                      <th className="text-right py-2 px-2 font-semibold text-gray-700">
-                        Monthly Revenue
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {stats.topPerformers.slice(0, 5).map((performer, idx) => (
-                      <tr key={idx} className="border-b hover:bg-white">
-                        <td className="py-2 px-2 text-gray-900 font-medium">
-                          {performer.name}
-                        </td>
-                        <td className="py-2 px-2 text-gray-600">
-                          {performer.shopId?.name || "N/A"}
-                        </td>
-                        <td className="py-2 px-2 text-right text-green-600 font-semibold">
-                          {formatCurrency(performer.monthlyPerformance?.totalAmount || 0)}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </Card>
-          )}
+              <table className="min-w-full table-auto border-collapse">
+                {/* Table Header */}
+                <thead>
+                  <tr className="border-b bg-gray-50">
+                    
+                    <th className="px-3 py-2 text-left text-sm font-semibold text-gray-700 whitespace-nowrap">
+                      Name
+                    </th>
 
+                    <th className="px-3 py-2 text-left text-sm font-semibold text-gray-700 whitespace-nowrap">
+                      Shop
+                    </th>
+
+                    <th className="px-3 py-2 text-right text-sm font-semibold text-gray-700 whitespace-nowrap">
+                    Monthly Revenue
+                    </th>
+
+                  </tr>
+                </thead>
+
+                {/* Table Body */}
+                <tbody className="divide-y divide-gray-200">
+                  
+                  {stats.topPerformers.slice(0, 5).map((performer, idx) => (
+                    <tr
+                    key={idx}
+                    className="hover:bg-white transition duration-150"
+                    >
+                      
+                {/* Name */}
+                <td className="px-3 py-2 text-sm font-medium text-gray-900 whitespace-nowrap">
+                  {performer.name}
+                </td>
+                
+                {/* Shop */}
+                <td className="px-3 py-2 text-sm text-gray-600 whitespace-nowrap">
+                  {performer.shopId?.name || "N/A"}
+                </td>
+
+                {/* Revenue */}
+                <td className="px-3 py-2 text-sm text-right font-semibold text-green-600 whitespace-nowrap">
+                  {formatCurrency(
+                    performer.monthlyPerformance?.totalAmount || 0
+                  )}
+                </td>
+
+            </tr>
+          ))}
+
+        </tbody>
+      </table>
+    </div>
+  </Card>
+)}
         </>
       )}
 
