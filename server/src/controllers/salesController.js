@@ -2,6 +2,8 @@
 import Sale from '../models/Sale.js';
 import Inventory from '../models/Inventory.js';
 import StockLedger from '../models/StockLedger.js';
+import Staff from '../models/Staff.js';
+import jwt from 'jsonwebtoken';
 import { generateBillNo } from '../utils/generateBillNo.js';
 import { inventoryService } from '../services/inventoryService.js';
 import { responseHelper } from '../utils/responseHelper.js';
@@ -14,12 +16,42 @@ export const salesController = {
       const shopId = req.user?.shopId;
 
       // 🔍 DETAILED DEBUG LOGGING
-      console.log('[SALE CREATE] Request body:', { items: items?.length, totalAmount, paymentMethod });
+      console.log('[SALE CREATE] Request body:', { items: items?.length, totalAmount, paymentMethod, staffId });
       console.log('[SALE CREATE] req.user:', { id: req.user?.id, role: req.user?.role, shopId: req.user?.shopId ? req.user.shopId.toString() : null });
 
       if (!req.user) {
         console.error('[SALE CREATE ERROR] No authenticated user');
         return responseHelper.error(res, 'Authentication required', 401);
+      }
+
+      if (!staffId) {
+        return responseHelper.error(res, 'POS staff authorization is required for billing', 400);
+      }
+
+      const posToken = req.headers['x-pos-auth-token'] || req.headers['X-POS-AUTH-TOKEN'];
+      if (!posToken) {
+        return responseHelper.error(res, 'POS authorization token missing', 401);
+      }
+
+      let decodedPos;
+      try {
+        decodedPos = jwt.verify(posToken, process.env.JWT_SECRET);
+      } catch (e) {
+        console.error('[SALE CREATE ERROR] Invalid POS token', e.message);
+        return responseHelper.error(res, 'Invalid or expired POS authorization token', 401);
+      }
+
+      if (decodedPos.staffId !== staffId) {
+        return responseHelper.error(res, 'Staff authorization does not match selected staff', 401);
+      }
+
+      if (decodedPos.shopId !== shopId?.toString()) {
+        return responseHelper.error(res, 'POS authorization token does not match shop session', 401);
+      }
+
+      const authorizedStaff = await Staff.findById(staffId);
+      if (!authorizedStaff || !authorizedStaff.isActive) {
+        return responseHelper.error(res, 'Authorized staff member is not available', 403);
       }
 
       // Validate input

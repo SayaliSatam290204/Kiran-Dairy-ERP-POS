@@ -1,6 +1,7 @@
 import { Modal } from "./ui/Modal.jsx";
 import { Badge } from "./ui/Badge.jsx";
 import { formatCurrency } from "../utils/formatCurrency.js";
+import { useAuth } from "../hooks/useAuth.js";
 
 export const StaffPerformanceModal = ({ isOpen, onClose, staff, performance }) => {
   if (!staff || !performance) return null;
@@ -37,6 +38,10 @@ export const StaffPerformanceModal = ({ isOpen, onClose, staff, performance }) =
     (!monthlyData.totalSales || monthlyData.totalSales === 0) &&
     (!yearlyData.totalSales || yearlyData.totalSales === 0);
 
+  const { user } = useAuth();
+  const isShopUser = user?.role === 'shop';
+  const showSalary = !isShopUser;
+  const showStaffDetails = !isShopUser;
   const cleanStaffName = (staff?.name || "").split(" - ")[0];
 
   const Section = ({ title, subtitle, variant = "neutral", children }) => (
@@ -108,8 +113,11 @@ export const StaffPerformanceModal = ({ isOpen, onClose, staff, performance }) =
   const staffInfoRows = [
     { label: "Staff Name", value: staff.name?.split(" - ")[0] || "N/A" },
     { label: "Email", value: staff.email || "N/A" },
-    { label: "Phone", value: staff.phone || "N/A" },
-    {
+    { label: "Phone", value: staff.phone || "N/A" }
+  ];
+
+  if (showSalary) {
+    staffInfoRows.push({
       label: "Base Salary",
       value:
         staff?.baseSalary === undefined || staff?.baseSalary === null
@@ -117,8 +125,8 @@ export const StaffPerformanceModal = ({ isOpen, onClose, staff, performance }) =
             ? "N/A"
             : formatCurrency(performance.staff.baseSalary)
           : formatCurrency(staff.baseSalary)
-    }
-  ];
+    });
+  }
 
   const weeklyRows = [
     { label: "Total Sales", value: weeklyData.totalSales || 0 },
@@ -171,31 +179,33 @@ export const StaffPerformanceModal = ({ isOpen, onClose, staff, performance }) =
       size="3xl"
     >
       <div className="mx-auto max-h-[80vh] w-full space-y-6 overflow-y-auto pr-2">
-        <Section
-          title="Staff Details"
-          subtitle="Basic information and assigned shifts."
-          variant="staff"
-        >
-          <MetricTable rows={staffInfoRows} variant="staff" />
+        {showStaffDetails && (
+          <Section
+            title="Staff Details"
+            subtitle="Basic information and assigned shifts."
+            variant="staff"
+          >
+            <MetricTable rows={staffInfoRows} variant="staff" />
 
-          {staff.shifts && staff.shifts.length > 0 && (
-            <div className="mt-4">
-              <p className="mb-2 text-sm font-semibold text-indigo-700">
-                Assigned Shifts
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {staff.shifts.map((shift) => (
-                  <Badge
-                    key={shift}
-                    className="rounded-full bg-indigo-100 px-3 py-1 text-xs font-semibold capitalize text-indigo-700 border border-indigo-200"
-                  >
-                    {shift} Shift
-                  </Badge>
-                ))}
+            {staff.shifts && staff.shifts.length > 0 && (
+              <div className="mt-4">
+                <p className="mb-2 text-sm font-semibold text-indigo-700">
+                  Assigned Shifts
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {staff.shifts.map((shift) => (
+                    <Badge
+                      key={shift}
+                      className="rounded-full bg-indigo-100 px-3 py-1 text-xs font-semibold capitalize text-indigo-700 border border-indigo-200"
+                    >
+                      {shift} Shift
+                    </Badge>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
-        </Section>
+            )}
+          </Section>
+        )}
 
         {hasNoData ? (
           <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-6 py-12 text-center w-full">

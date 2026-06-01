@@ -32,6 +32,7 @@ export const Staff = () => {
     shifts: ["morning"],
     baseSalary: "",
     joinDate: "",
+    pin: "",
     notes: ""
   });
 
@@ -76,6 +77,7 @@ export const Staff = () => {
         shifts: staffMember.shifts,
         baseSalary: staffMember.baseSalary,
         joinDate: staffMember.joinDate.split('T')[0],
+        pin: "",
         notes: staffMember.notes
       });
     }
@@ -93,6 +95,7 @@ export const Staff = () => {
       shifts: ["morning"],
       baseSalary: "",
       joinDate: "",
+      pin: "",
       notes: ""
     });
   };
@@ -116,6 +119,10 @@ export const Staff = () => {
     e.preventDefault();
     if (!formData.name || !formData.email || !formData.phone || !formData.baseSalary || !formData.joinDate || !formData.shopId) {
       return toast.error("Please fill all required fields");
+    }
+
+    if (!editingId && !formData.pin) {
+      return toast.error("Please assign a unique PIN for the new staff member");
     }
 
     try {
@@ -319,6 +326,20 @@ const handleClosePerformanceModal = () => {
                 onChange={handleChangeForm}
                 required
               />
+              <Input
+                label="Staff PIN"
+                name="pin"
+                type="password"
+                value={formData.pin}
+                onChange={handleChangeForm}
+                placeholder={editingId ? "Leave blank to keep existing PIN" : "Enter unique PIN"}
+                className="mt-2"
+              />
+              {editingId && (
+                <p className="text-xs text-gray-500 mt-1">
+                  Leave blank to keep the current PIN, or enter a new PIN to reset it.
+                </p>
+              )}
             </div>
 
             {/* Shop Selection Section */}

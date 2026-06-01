@@ -236,21 +236,6 @@ export const Products = () => {
                   <span className="text-sm font-semibold text-slate-900">
                     {formatCurrency(product.effectivePrice || product.price)}
                   </span>
-                  <div className="grid grid-cols-4 gap-2 mt-2">
-                    <input 
-                      type="number" 
-                      defaultValue={product.effectivePrice || product.price}
-                      className="p-1 border border-blue-300 rounded text-xs focus:border-blue-500 focus:outline-none"
-                      onBlur={(e) => {
-                        const newPrice = parseFloat(e.target.value);
-                        if (newPrice && newPrice !== product.price) {
-                          // TODO: API call to update shopPrice
-                          toast.success('Price updated');
-                        }
-                      }}
-                      placeholder="Override"
-                    />
-                  </div>
                   <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                     <button
                       onClick={() => navigate(`/admin/products/${product._id}`)}

@@ -55,12 +55,32 @@ export const POS = () => {
   const [staffList, setStaffList] = useState([]);
   const [selectedStaffId, setSelectedStaffId] = useState(localStorage.getItem("pos_staff_id") || "");
   const [selectedShift, setSelectedShift] = useState(localStorage.getItem("pos_shift") || "morning");
+  const [staffPin, setStaffPin] = useState("");
+  const [posAuthToken, setPosAuthToken] = useState(localStorage.getItem("pos_auth_token") || "");
+  const [authorizedStaffId, setAuthorizedStaffId] = useState(localStorage.getItem("pos_authorized_staff_id") || "");
+  const [authorizedStaffName, setAuthorizedStaffName] = useState(localStorage.getItem("pos_authorized_staff_name") || "");
+  const [authorizationLoading, setAuthorizationLoading] = useState(false);
+
+  const isStaffAuthorized = Boolean(
+    posAuthToken && authorizedStaffId && selectedStaffId && authorizedStaffId === selectedStaffId
+  );
 
   useEffect(() => {
     if (user?.shopId) {
       fetchStaff();
     }
   }, [user?.shopId]);
+
+  useEffect(() => {
+    if (authorizedStaffId && selectedStaffId && authorizedStaffId !== selectedStaffId) {
+      setPosAuthToken("");
+      setAuthorizedStaffId("");
+      setAuthorizedStaffName("");
+      localStorage.removeItem("pos_auth_token");
+      localStorage.removeItem("pos_authorized_staff_id");
+      localStorage.removeItem("pos_authorized_staff_name");
+    }
+  }, [selectedStaffId, authorizedStaffId]);
 
   const fetchStaff = async () => {
     try {
@@ -81,12 +101,62 @@ export const POS = () => {
     const id = e.target.value;
     setSelectedStaffId(id);
     localStorage.setItem("pos_staff_id", id);
+
+    if (id !== authorizedStaffId) {
+      setPosAuthToken("");
+      setAuthorizedStaffId("");
+      setAuthorizedStaffName("");
+      localStorage.removeItem("pos_auth_token");
+      localStorage.removeItem("pos_authorized_staff_id");
+      localStorage.removeItem("pos_authorized_staff_name");
+    }
   };
 
   const handleShiftChange = (e) => {
     const shift = e.target.value;
     setSelectedShift(shift);
     localStorage.setItem("pos_shift", shift);
+  };
+
+  const handleAuthorizeStaff = async () => {
+    if (!selectedStaffId) {
+      return toast.error("Please select a staff member first");
+    }
+    if (!staffPin.trim()) {
+      return toast.error("Enter the staff PIN or phone number");
+    }
+
+    setAuthorizationLoading(true);
+    try {
+      const response = await staffApi.authorizeStaff({
+        staffId: selectedStaffId,
+        pin: staffPin
+      });
+      const { token, name } = response.data.data;
+      setPosAuthToken(token);
+      setAuthorizedStaffId(selectedStaffId);
+      setAuthorizedStaffName(name);
+      localStorage.setItem("pos_auth_token", token);
+      localStorage.setItem("pos_authorized_staff_id", selectedStaffId);
+      localStorage.setItem("pos_authorized_staff_name", name);
+      toast.success("Staff authorized for POS billing");
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Staff authorization failed");
+    } finally {
+      setAuthorizationLoading(false);
+      setStaffPin("");
+    }
+  };
+
+  const resetStaffAuthorization = () => {
+    setPosAuthToken("");
+    setAuthorizedStaffId("");
+    setAuthorizedStaffName("");
+    setStaffPin("");
+    localStorage.removeItem("pos_auth_token");
+    localStorage.removeItem("pos_authorized_staff_id");
+    localStorage.removeItem("pos_authorized_staff_name");
+    toast.success("Staff authorization reset");
   };
 
   // ===== Images =====
@@ -374,6 +444,11 @@ export const POS = () => {
       return;
     }
 
+    if (!isStaffAuthorized) {
+      toast.error("Please authorize staff for POS billing before checkout");
+      return;
+    }
+
     // validate card details when card selected (non-split)
     if (!splitPayment && paymentMethod === "card") {
       const err = validateCardDetails();
@@ -424,7 +499,11 @@ export const POS = () => {
             },
       };
 
-      const res = await salesApi.create(payload);
+      const res = await salesApi.create(payload, {
+        headers: {
+          'x-pos-auth-token': posAuthToken
+        }
+      });
 
       toast.success("Sale completed!");
 
@@ -479,6 +558,11 @@ export const POS = () => {
         <div>
           <h1 className="text-3xl font-bold">POS Billing</h1>
           <p className="text-sm text-gray-500">Create new sales and print bills</p>
+          {!isStaffAuthorized && (
+            <div className="mt-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              Staff authorization is required before billing. Select a staff member and authorize with the assigned PIN.
+            </div>
+          )}
         </div>
 
         {/* Staff & Shift Selection */}
@@ -509,6 +593,54 @@ export const POS = () => {
               <option value="morning">☀️ Morning</option>
               <option value="evening">🌙 Evening</option>
             </select>
+          </div>
+
+          <div className="w-full border-t border-gray-200 pt-3 mt-3">
+            {selectedStaffId ? (
+              isStaffAuthorized ? (
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-semibold text-green-700">Authorized staff: {authorizedStaffName}</p>
+                    <p className="text-xs text-gray-500">POS billing is ready for this staff.</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={resetStaffAuthorization}
+                    className="px-3 py-2 text-sm font-semibold text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+                  >
+                    Reset authorization
+                  </button>
+                </div>
+              ) : (
+                <div className="grid gap-3 sm:grid-cols-[1fr_auto] items-end">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-500 mb-1">
+                      Staff PIN
+                    </label>
+                    <input
+                      type="password"
+                      value={staffPin}
+                      onChange={(e) => setStaffPin(e.target.value)}
+                      placeholder="Enter staff PIN"
+                      className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                    />
+                    <p className="mt-1 text-xs text-gray-500">
+                      Use staff PIN if configured.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleAuthorizeStaff}
+                    disabled={authorizationLoading}
+                    className="inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300"
+                  >
+                    {authorizationLoading ? 'Authorizing…' : 'Authorize Staff'}
+                  </button>
+                </div>
+              )
+            ) : (
+              <p className="text-xs text-gray-500">Select a staff member to authorize POS billing.</p>
+            )}
           </div>
         </div>
       </div>
@@ -821,17 +953,27 @@ export const POS = () => {
                             toast.error("Please select a staff member at the top first!");
                             return;
                           }
+                          if (!isStaffAuthorized) {
+                            toast.error("Staff must be authorized with PIN before payment.");
+                            return;
+                          }
                           setIsCheckoutOpen(true);
                         }}
-                        disabled={cart.length === 0 || !selectedStaffId}
-                        className={`w-full mt-2 text-sm ${!selectedStaffId ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : ''}`}
+                        disabled={cart.length === 0 || !isStaffAuthorized}
+                        className={`w-full mt-2 text-sm ${!isStaffAuthorized ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : ''}`}
                       >
                         Proceed to Pay
                       </Button>
 
-                      {!selectedStaffId && cart.length > 0 && (
+                      {cart.length > 0 && !selectedStaffId && (
                         <p className="text-[10px] text-center text-red-500 font-bold mt-1 animate-pulse">
                           ⚠️ Select Staff at top to Pay
+                        </p>
+                      )}
+
+                      {cart.length > 0 && selectedStaffId && !isStaffAuthorized && (
+                        <p className="text-[10px] text-center text-red-500 font-bold mt-1 animate-pulse">
+                          ⚠️ Authorize selected staff with PIN before payment
                         </p>
                       )}
 

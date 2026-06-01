@@ -14,6 +14,11 @@ export const staffApi = {
     return axiosInstance.get(`/staff/shop/${shopId}`);
   },
 
+  // Authorize staff for POS billing
+  authorizeStaff: async (data) => {
+    return axiosInstance.post('/staff/authorize', data);
+  },
+
   // Get single staff
   getStaffById: async (id) => {
     return axiosInstance.get(`/staff/${id}`);

@@ -14,6 +14,9 @@ router.get('/', allowAdminAndShop, staffController.getAllStaff);
 // Get staff by shop ID
 router.get('/shop/:shopId', allowAdminAndShop, staffController.getStaffByShop);
 
+// Authorize a staff member for POS billing
+router.post('/authorize', allowAdminAndShop, staffController.authorizeStaff);
+
 // Get single staff by ID
 router.get('/:id', allowAdminAndShop, staffController.getStaffById);
 

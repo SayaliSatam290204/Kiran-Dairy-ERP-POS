@@ -13,6 +13,10 @@ const staffSchema = new mongoose.Schema(
       required: true,
       select: false  // Hide by default
     },
+    pinHash: {
+      type: String,
+      select: false
+    },
     email: {
       type: String,
       required: true,

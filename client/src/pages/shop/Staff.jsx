@@ -111,16 +111,6 @@ export const ShopStaff = () => {
                   </p>
                 </div>
 
-                {/* Advance Balance Info */}
-                <div className="flex items-center justify-between py-2 border-t border-gray-100">
-                  <span className="text-sm text-gray-600">Advance Balance</span>
-                  <span className={`text-sm font-bold ${
-                    member.advanceBalance > 0 ? 'text-red-600' : 'text-gray-400'
-                  }`}>
-                    ₹{member.advanceBalance || 0}
-                  </span>
-                </div>
-
                 <button
                   onClick={() => handleViewPerformance(member)}
                   disabled={performanceLoading}

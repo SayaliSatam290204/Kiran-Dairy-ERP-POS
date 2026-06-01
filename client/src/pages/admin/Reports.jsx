@@ -296,7 +296,7 @@ export const Reports = () => {
                               <td className="px-4 py-2 font-semibold">{formatCurrency(sale.totalAmount)}</td>
                               <td className="px-4 py-2">
                                 <Badge variant="primary">
-                                  {sale.paymentMethod?.toLowerCase() === "split" ? "cash + UPI" : (sale.paymentMethod || "cash")}
+                                  {sale.paymentMethod?.toLowerCase() === "split" ? "Cash + UPI" : (sale.paymentMethod ? sale.paymentMethod.charAt(0).toUpperCase() + sale.paymentMethod.slice(1) : "Cash")}
                                 </Badge>
                               </td>
                               <td className="px-4 py-2 text-gray-600">{formatDate(sale.createdAt)}</td>

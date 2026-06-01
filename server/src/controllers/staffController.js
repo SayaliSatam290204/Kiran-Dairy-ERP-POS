@@ -1,7 +1,18 @@
 import mongoose from 'mongoose';
+import bcryptjs from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+
 import Staff from '../models/Staff.js';
 import StaffPayment from '../models/StaffPayment.js';
 import { responseHelper } from '../utils/responseHelper.js';
+
+const signPosToken = (staffId, shopId) => {
+  return jwt.sign(
+    { staffId, shopId },
+    process.env.JWT_SECRET,
+    { expiresIn: '2h' }
+  );
+};
 
 export const staffController = {
   // Get all staff for admin or shop manager
@@ -95,6 +106,11 @@ export const staffController = {
         notes
       });
 
+      if (req.body.pin) {
+        const pinHash = await bcryptjs.hash(String(req.body.pin).trim(), 10);
+        newStaff.pinHash = pinHash;
+      }
+
       await newStaff.save();
       await newStaff.populate('shopId', 'name location');
       await newStaff.populate('createdBy', 'name email');
@@ -137,6 +153,9 @@ export const staffController = {
       if (status) staff.status = status;
       if (joinDate) staff.joinDate = joinDate;
       if (notes !== undefined) staff.notes = notes;
+      if (req.body.pin) {
+        staff.pinHash = await bcryptjs.hash(String(req.body.pin).trim(), 10);
+      }
 
       await staff.save();
       await staff.populate('shopId', 'name location');
@@ -193,6 +212,52 @@ export const staffController = {
         .sort({ name: 1 });
 
       return responseHelper.success(res, staff, 'Shop staff retrieved successfully');
+    } catch (error) {
+      return responseHelper.error(res, error.message, 500);
+    }
+  },
+
+  // Authorize staff for POS billing
+  authorizeStaff: async (req, res) => {
+    try {
+      const { staffId, pin } = req.body;
+      const userRole = req.user.role;
+
+      if (!staffId || !pin) {
+        return responseHelper.error(res, 'Staff ID and PIN are required', 400);
+      }
+
+      const staff = await Staff.findById(staffId).select('+pinHash shopId status');
+      if (!staff) {
+        return responseHelper.error(res, 'Staff member not found', 404);
+      }
+
+      if (staff.status !== 'active') {
+        return responseHelper.error(res, 'Staff member is not active', 403);
+      }
+
+      if (userRole === 'shop' && staff.shopId.toString() !== req.user.shopId.toString()) {
+        return responseHelper.error(res, 'Unauthorized access to staff member', 403);
+      }
+
+      if (!staff.pinHash) {
+        return responseHelper.error(res, 'Staff PIN is not configured. Set a PIN in staff management.', 403);
+      }
+
+      const providedPin = String(pin).trim();
+      const isvalidPin = await bcryptjs.compare(providedPin, staff.pinHash);
+
+      if (!isvalidPin) {
+        return responseHelper.error(res, 'Invalid staff PIN', 401);
+      }
+
+      const token = signPosToken(staff._id.toString(), staff.shopId.toString());
+
+      return responseHelper.success(res, {
+        token,
+        staffId: staff._id,
+        name: staff.name
+      }, 'Staff authorized successfully');
     } catch (error) {
       return responseHelper.error(res, error.message, 500);
     }
