@@ -388,7 +388,9 @@ export const staffPerformanceService = {
   // Get staff individual performance with monthly/yearly breakdown
   async getStaffDetailedPerformance(staffId, year, month) {
     try {
-      const staff = await Staff.findById(staffId).populate('shopId', 'name location');
+      const staff = await Staff.findById(staffId)
+        .select('+baseSalary')
+        .populate('shopId', 'name location');
       
       const monthlyPerf = await this.getMonthlyPerformance(staffId, year, month);
       const yearlyPerf = await this.getYearlyPerformance(staffId, year);
@@ -426,7 +428,8 @@ export const staffPerformanceService = {
           _id: staff._id,
           name: staff.name,
           email: staff.email,
-          shop: staff.shopId
+          shop: staff.shopId,
+          baseSalary: staff.baseSalary
         },
         monthly: monthlyPerf,
         yearly: yearlyPerf,

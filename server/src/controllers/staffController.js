@@ -22,6 +22,8 @@ export const staffController = {
       }
 
       const staff = await Staff.find(query)
+        // Include baseSalary so Staff Management table can show it
+        .select('+baseSalary')
         .populate('shopId', 'name location')
         .populate('createdBy', 'name email')
         .sort({ createdAt: -1 });
@@ -162,12 +164,9 @@ export const staffController = {
         return responseHelper.error(res, 'Unauthorized access', 403);
       }
 
-      staff.isActive = false;
-      staff.status = 'inactive';
-      await staff.save();
-
-      // Also delete all associated payments for this staff member
+      // Keep data model history (payments will be removed), but remove staff from staff management list.
       await StaffPayment.deleteMany({ staffId: id });
+      await Staff.findByIdAndDelete(id);
 
       return responseHelper.success(res, staff, 'Staff deleted successfully');
     } catch (error) {

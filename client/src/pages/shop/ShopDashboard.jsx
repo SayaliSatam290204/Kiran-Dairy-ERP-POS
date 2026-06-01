@@ -92,6 +92,8 @@ export const ShopDashboard = () => {
 
         setStats({
           ...dashboardData,
+          // Backend uses `pendingReturns` key; UI uses `totalReturns`
+          totalReturns: dashboardData.pendingReturns ?? dashboardData.totalReturns ?? 0,
           pendingPayments: pendingAmount,
           totalStaff: allStaff.length,
           activeStaff: activeCount

@@ -337,25 +337,10 @@ export const ledgerController = {
       if (!product) return responseHelper.error(res, 'Product not found', 404);
       if (!inventory) return responseHelper.error(res, 'No inventory for this product', 404);
 
-      const existingOpenRequest = await RestockRequest.findOne({
-        shopId,
-        productId,
-        status: { $in: ['pending', 'approved'] }
-      }).sort('-createdAt');
+      // NOTE: Duplicate restock requests for the same shop+product are allowed.
+      // Previously, this controller blocked creation when an open request
+      // (pending/approved) existed (HTTP 409).
 
-      if (existingOpenRequest) {
-        const isOldPending =
-          existingOpenRequest.status === 'pending' &&
-          Date.now() - existingOpenRequest.createdAt.getTime() > 24 * 60 * 60 * 1000;
-
-        if (!isOldPending) {
-          return responseHelper.error(
-            res,
-            'A restock request for this product is already open. Please wait for admin action before sending another request.',
-            409
-          );
-        }
-      }
 
       const request = new RestockRequest({
         shopId,

@@ -126,15 +126,15 @@ export const Returns = () => {
     {
       key: "itemCount",
       label: "Items",
-      render: (items) => (Array.isArray(items) ? items.length : 0)
+      render: (_, row) => (Array.isArray(row?.items) ? row.items.length : 0)
     },
 
     {
       key: "products",
       label: "Products",
-      render: (items) =>
-        Array.isArray(items) && items.length
-          ? items
+      render: (_, row) =>
+        Array.isArray(row?.items) && row.items.length
+          ? row.items
               .map((it) => `${it?.productId?.name || "Product"} x${it.quantity}`)
               .join(" | ")
           : "—"
@@ -143,9 +143,9 @@ export const Returns = () => {
     {
       key: "reasons",
       label: "Reasons",
-      render: (items) =>
-        Array.isArray(items) && items.length
-          ? items
+      render: (_, row) =>
+        Array.isArray(row?.items) && row.items.length
+          ? row.items
               .map((it) => RETURN_REASONS[it.reason] || it.reason)
               .join(", ")
           : "—"

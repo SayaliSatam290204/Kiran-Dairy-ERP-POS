@@ -2,15 +2,15 @@ import axiosInstance from './axiosInstance.js';
 
 export const staffPaymentApi = {
   // Get all payments
-  getAllPayments: async (filters = {}) => {
-    const params = new URLSearchParams();
-    if (filters.shopId) params.append('shopId', filters.shopId);
-    if (filters.staffId) params.append('staffId', filters.staffId);
-    if (filters.month) params.append('month', filters.month);
-    if (filters.status) params.append('status', filters.status);
-    
-    return axiosInstance.get(`/staff-payment?${params.toString()}`);
-  },
+  getAllPayments: async (filters = {}) =>
+    axiosInstance.get('/staff-payment', {
+      params: {
+        ...(filters.shopId ? { shopId: filters.shopId } : {}),
+        ...(filters.staffId ? { staffId: filters.staffId } : {}),
+        ...(filters.month ? { month: filters.month } : {}),
+        ...(filters.status ? { status: filters.status } : {})
+      }
+    }),
 
   // Get single payment
   getPaymentById: async (id) => {
@@ -33,20 +33,20 @@ export const staffPaymentApi = {
   },
 
   // Get payment summary
-  getPaymentSummary: async (filters = {}) => {
-    const params = new URLSearchParams();
-    if (filters.shopId) params.append('shopId', filters.shopId);
-    if (filters.year) params.append('year', filters.year);
-    if (filters.month) params.append('month', filters.month);
-    
-    return axiosInstance.get(`/staff-payment/summary?${params.toString()}`);
-  },
+  getPaymentSummary: async (filters = {}) =>
+    axiosInstance.get('/staff-payment/summary', {
+      params: {
+        ...(filters.shopId ? { shopId: filters.shopId } : {}),
+        ...(filters.year ? { year: filters.year } : {}),
+        ...(filters.month ? { month: filters.month } : {})
+      }
+    }),
 
   // Get pending payments
-  getPendingPayments: async (shopId = null) => {
-    const params = new URLSearchParams();
-    if (shopId) params.append('shopId', shopId);
-    
-    return axiosInstance.get(`/staff-payment/pending?${params.toString()}`);
-  }
+  getPendingPayments: async (shopId = null) =>
+    axiosInstance.get('/staff-payment/pending', {
+      params: {
+        ...(shopId ? { shopId } : {})
+      }
+    })
 };

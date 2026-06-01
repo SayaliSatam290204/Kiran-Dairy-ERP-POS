@@ -3,6 +3,7 @@ import Sale from "../models/Sale.js";
 import Shop from "../models/Shop.js";
 import Staff from "../models/Staff.js";
 import Inventory from "../models/Inventory.js";
+import Product from "../models/Product.js";
 import Dispatch from "../models/Dispatch.js";
 import Return from "../models/Return.js";
 import { staffPerformanceService } from "../services/staffPerformanceService.js";
@@ -120,7 +121,7 @@ export const shopController = {
         effectivePrice: product.shopPrices?.find(p => p.shopId.toString() === shopId.toString())?.price || product.price
       }));
 
-      responseHelper.success(res, productsWithEffectivePrice, 'Products with shop-specific pricing');
+      return responseHelper.success(res, productsWithEffectivePrice, 'Products with shop-specific pricing');
     } catch (error) {
       responseHelper.error(res, 'Failed to fetch products', 500);
     }
@@ -165,12 +166,47 @@ export const shopController = {
     }
   },
 
-  // ✅ SAFE FIX: These prevent route crash
   getStaffDetailedPerformance: async (req, res) => {
-    return responseHelper.success(res, {
-      message: "Staff detailed performance not implemented yet"
-    });
+    try {
+      const { staffId } = req.params;
+      const year = parseInt(req.query.year) || new Date().getFullYear();
+      const month = parseInt(req.query.month) || new Date().getMonth() + 1;
+
+      if (!staffId) {
+        return responseHelper.error(res, "Staff ID is required", 400);
+      }
+
+      // Authorization:
+      // - admin can access any staff
+      // - shop manager can access only staff belonging to their shop
+      if (req.user?.role === "shop") {
+        const staff = await Staff.findById(staffId).select("shopId");
+        if (!staff) {
+          return responseHelper.error(res, "Staff not found", 404);
+        }
+
+        if (!staff.shopId || staff.shopId.toString() !== req.user.shopId.toString()) {
+          return responseHelper.error(res, "Forbidden", 403);
+        }
+      }
+
+      const performance = await staffPerformanceService.getStaffDetailedPerformance(
+        staffId,
+        year,
+        month
+      );
+
+      return responseHelper.success(
+        res,
+        performance,
+        "Staff detailed performance fetched successfully"
+      );
+    } catch (error) {
+      console.error("Error fetching staff detailed performance:", error);
+      return responseHelper.error(res, "Failed to fetch staff detailed performance", 500);
+    }
   },
+
 
 
   getPreviewData: async (req, res) => {

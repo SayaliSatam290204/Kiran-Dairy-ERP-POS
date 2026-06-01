@@ -8,7 +8,7 @@ export const staffPerformanceApi = {
 
   // Get individual staff detailed performance
   getStaffDetailedPerformance: (staffId, year, month) =>
-    axiosInstance.get(`/admin/staff-performance/${staffId}`, {
+    axiosInstance.get(`/shop/staff-performance/${staffId}`, {
       params: { year, month }
     }),
 
