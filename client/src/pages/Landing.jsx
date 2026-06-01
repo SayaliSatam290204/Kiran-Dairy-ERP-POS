@@ -60,11 +60,15 @@ const Landing = () => {
     staffData: []
   });
   const [loading, setLoading] = useState(true);
+  const [rawPreview, setRawPreview] = useState(null);
+  const [showPreviewDebug, setShowPreviewDebug] = useState(false);
 
   useEffect(() => {
     const fetchPreviewData = async () => {
       try {
         const response = await shopApi.getPreviewData();
+        console.debug("[Landing] preview response:", response);
+        setRawPreview(response.data || response);
         const data = response.data.data || {};
         setPreviewData({
           branchData: data.branchData?.length ? data.branchData : FALLBACK_DATA.branchData,
@@ -317,6 +321,29 @@ const Landing = () => {
                 )}
               </div>
             </div>
+
+            {import.meta.env.DEV && (
+              <>
+                <button
+                  onClick={() => setShowPreviewDebug((s) => !s)}
+                  className="fixed left-4 bottom-4 z-50 bg-black/70 text-white px-3 py-2 rounded-lg text-sm shadow-lg"
+                >
+                  {showPreviewDebug ? "Hide" : "Show"} Preview Debug
+                </button>
+
+                {showPreviewDebug && rawPreview && (
+                  <div className="fixed left-4 bottom-16 z-50 w-[420px] max-h-[60vh] overflow-auto bg-white/95 border border-slate-200 rounded-lg p-3 shadow-2xl text-xs">
+                    <div className="flex justify-between items-center mb-2">
+                      <strong className="text-sm">Preview Response</strong>
+                      <button onClick={() => setRawPreview(null)} className="text-red-500 text-xs">Clear</button>
+                    </div>
+                    <pre className="whitespace-pre-wrap break-words text-[11px]">
+                      {JSON.stringify(rawPreview, null, 2)}
+                    </pre>
+                  </div>
+                )}
+              </>
+            )}
 
             {/* Top Branches */}
             <div className="group bg-white/70 backdrop-blur-xl border border-white/50 hover:border-blue-200/50 hover:shadow-2xl transition-all duration-500 rounded-3xl p-8 animate-stagger-child hover:scale-[1.02]">

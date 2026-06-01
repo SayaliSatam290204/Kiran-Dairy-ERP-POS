@@ -29,6 +29,8 @@ export const AdminDashboard = () => {
     topPerformers: [],
     activeShops: [],
   });
+  const [rawResponse, setRawResponse] = useState(null);
+  const [showDebug, setShowDebug] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -36,7 +38,10 @@ export const AdminDashboard = () => {
       try {
         setLoading(true);
         const response = await adminApi.getDashboard();
-        setStats(response.data.data);
+        // Debug: log response to help identify missing/incorrect data shape
+        console.debug("[AdminDashboard] dashboard response:", response);
+        setRawResponse(response.data || response);
+        setStats(response.data?.data || {});
 
       } catch (error) {
         console.error("Failed to fetch dashboard:", error);
@@ -114,7 +119,7 @@ export const AdminDashboard = () => {
               <div className="flex justify-between items-start">
                 <div>
                   <p className="text-sm font-medium text-gray-600 mb-2">Total Revenue</p>
-                  <p className="text-3xl font-bold text-orange-600">₹{stats.totalRevenue}</p>
+                  <p className="text-3xl font-bold text-orange-600">{formatCurrency(stats.totalRevenue || 0)}</p>
                   <p className="text-xs text-gray-500 mt-1">Overall earnings</p>
                 </div>
                 <FaRupeeSign className="text-4xl text-orange-400 opacity-30" />
@@ -215,6 +220,29 @@ export const AdminDashboard = () => {
             </Card>
           )}
 
+        </>
+      )}
+
+      {import.meta.env.DEV && (
+        <>
+          <button
+            onClick={() => setShowDebug((s) => !s)}
+            className="fixed right-4 bottom-4 z-50 bg-black/70 text-white px-3 py-2 rounded-lg text-sm shadow-lg"
+          >
+            {showDebug ? "Hide" : "Show"} Debug
+          </button>
+
+          {showDebug && rawResponse && (
+            <div className="fixed right-4 bottom-16 z-50 w-[420px] max-h-[60vh] overflow-auto bg-white/95 border border-slate-200 rounded-lg p-3 shadow-2xl text-xs">
+              <div className="flex justify-between items-center mb-2">
+                <strong className="text-sm">Dashboard Response</strong>
+                <button onClick={() => setRawResponse(null)} className="text-red-500 text-xs">Clear</button>
+              </div>
+              <pre className="whitespace-pre-wrap break-words text-[11px]">
+                {JSON.stringify(rawResponse, null, 2)}
+              </pre>
+            </div>
+          )}
         </>
       )}
     </div>

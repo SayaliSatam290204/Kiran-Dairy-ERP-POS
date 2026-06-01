@@ -290,3 +290,60 @@
 [SUPER-ADMIN] Super Admin user created (swaroopjadhav6161@gmail.com / Shree@45)
 
 [SUCCESS] Database reset and basic seeding complete!
+[INIT] Connected to database. Starting cleanup...
+[CLEAR] Cleared User collection
+[CLEAR] Cleared Product collection
+[CLEAR] Cleared Category collection
+[CLEAR] Cleared Unit collection
+[CLEAR] Cleared Shop collection
+[CLEAR] Cleared Staff collection
+[CLEAR] Cleared Dispatch collection
+[CLEAR] Cleared Sale collection
+[CLEAR] Cleared Return collection
+[CLEAR] Cleared Inventory collection
+[CLEAR] Cleared StockLedger collection
+[CLEAR] Cleared StaffPayment collection
+[✓] Default Units seeded
+[✓] Default Categories seeded
+[ADMIN] Admin user created (admin@kiran-dairy.com / admin123)
+[SUPER-ADMIN] Super Admin user created (swaroopjadhav6161@gmail.com / Shree@45)
+
+[SUCCESS] Database reset and basic seeding complete!
+[INIT] Connected to database. Starting cleanup...
+[CLEAR] Cleared User collection
+[CLEAR] Cleared Product collection
+[CLEAR] Cleared Category collection
+[CLEAR] Cleared Unit collection
+[CLEAR] Cleared Shop collection
+[CLEAR] Cleared Staff collection
+[CLEAR] Cleared Dispatch collection
+[CLEAR] Cleared Sale collection
+[CLEAR] Cleared Return collection
+[CLEAR] Cleared Inventory collection
+[CLEAR] Cleared StockLedger collection
+[CLEAR] Cleared StaffPayment collection
+[✓] Default Units seeded
+[✓] Default Categories seeded
+[ADMIN] Admin user created (admin@kiran-dairy.com / admin123)
+[SUPER-ADMIN] Super Admin user created (swaroopjadhav6161@gmail.com / Shree@45)
+
+[SUCCESS] Database reset and basic seeding complete!
+[INIT] Connected to database. Starting cleanup...
+[CLEAR] Cleared User collection
+[CLEAR] Cleared Product collection
+[CLEAR] Cleared Category collection
+[CLEAR] Cleared Unit collection
+[CLEAR] Cleared Shop collection
+[CLEAR] Cleared Staff collection
+[CLEAR] Cleared Dispatch collection
+[CLEAR] Cleared Sale collection
+[CLEAR] Cleared Return collection
+[CLEAR] Cleared Inventory collection
+[CLEAR] Cleared StockLedger collection
+[CLEAR] Cleared StaffPayment collection
+[✓] Default Units seeded
+[✓] Default Categories seeded
+[ADMIN] Admin user created (admin@kiran-dairy.com / admin123)
+[SUPER-ADMIN] Super Admin user created (swaroopjadhav6161@gmail.com / Shree@45)
+
+[SUCCESS] Database reset and basic seeding complete!

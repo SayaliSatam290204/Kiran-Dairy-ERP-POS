@@ -220,7 +220,13 @@ const seedAnalyticsData = async () => {
     console.log(`[✓] Updated ${inventoryToCreate.length} inventory records\n`);
 
     // ================= SALES =================
-    console.log('[SALES] Creating sales data for April 2026...');
+    const salesDays = 30;
+    const now = new Date();
+    const startDate = new Date(now);
+    startDate.setHours(0, 0, 0, 0);
+    startDate.setDate(startDate.getDate() - (salesDays - 1));
+
+    console.log(`[SALES] Creating sales data for the last ${salesDays} days starting ${startDate.toDateString()}...`);
     const shopRevenueTargets = {
       0: { expectedDaily: 8300, transactions: 25 },
       1: { expectedDaily: 6500, transactions: 20 },
@@ -233,8 +239,9 @@ const seedAnalyticsData = async () => {
     const salesToInsert = [];
     let billCounter = 1;
 
-    for (let day = 1; day <= 30; day++) {
-      const currentDate = new Date(Date.UTC(2026, 3, day));
+    for (let day = 0; day < salesDays; day++) {
+      const currentDate = new Date(startDate);
+      currentDate.setDate(currentDate.getDate() + day);
       for (let shopIdx = 0; shopIdx < allShops.length; shopIdx++) {
         const shop = allShops[shopIdx];
         const target = shopRevenueTargets[shopIdx];
@@ -242,11 +249,10 @@ const seedAnalyticsData = async () => {
 
         const dayOfWeek = currentDate.getDay();
         const multiplier = (dayOfWeek === 0 || dayOfWeek === 6 ? 1.3 : 1.0) * (day > 20 ? 1.2 : 1.0);
-        const transactionsToday = Math.ceil(target.transactions * (0.8 + Math.random() * 0.4) * multiplier);
+        const transactionsToday = Math.max(1, Math.ceil(target.transactions * (0.8 + Math.random() * 0.4) * multiplier));
 
         for (let t = 0; t < transactionsToday; t++) {
           const items = [];
-          let total = 0;
           const itemCount = 1 + Math.floor(Math.random() * 4);
 
           for (let i = 0; i < itemCount; i++) {
@@ -254,11 +260,10 @@ const seedAnalyticsData = async () => {
             const qty = 1 + Math.floor(Math.random() * 5);
             const subtotal = prod.price * qty;
             items.push({ productId: prod._id, productName: prod.name, quantity: qty, price: prod.price, subtotal });
-            total += subtotal;
           }
 
           const avgBillValue = target.expectedDaily / target.transactions;
-          const finalTotal = Math.round(avgBillValue * (0.7 + Math.random() * 0.6));
+          const finalTotal = Math.max(50, Math.round(avgBillValue * (0.75 + Math.random() * 0.5)));
           const primaryCategory = items.length > 0 ? getProductCategory(items[0].productName) : 'other';
           const saleTime = getPeakHour(currentDate);
 
