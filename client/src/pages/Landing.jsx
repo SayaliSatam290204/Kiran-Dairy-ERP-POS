@@ -219,8 +219,8 @@ export const Landing = () => {
         </div>
 
         {previewData && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div className="bg-white border border-gray-200 p-6 rounded-lg">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="bg-white border border-gray-200 p-6 rounded-lg shadow-sm">
               <div className="border-b border-gray-200 pb-4 mb-6">
                 <h3 className="font-sans font-bold text-xl">Branch Revenue vs Expected</h3>
               </div>
@@ -229,23 +229,21 @@ export const Landing = () => {
               </div>
             </div>
             
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-              <div className="bg-white border border-gray-200 p-6 rounded-lg">
-                <div className="border-b border-gray-200 pb-4 mb-6">
-                  <h3 className="font-sans font-bold text-xl">Top Branches</h3>
-                </div>
-                <div className="h-[200px]">
-                  <TopBranchesBarChart data={previewData.topBranches} />
-                </div>
+            <div className="bg-white border border-gray-200 p-6 rounded-lg shadow-sm">
+              <div className="border-b border-gray-200 pb-4 mb-6">
+                <h3 className="font-sans font-bold text-xl">Top Branches</h3>
               </div>
+              <div className="h-[300px]">
+                <TopBranchesBarChart data={previewData.topBranches} />
+              </div>
+            </div>
               
-              <div className="bg-white border border-gray-200 p-6 rounded-lg">
-                <div className="border-b border-gray-200 pb-4 mb-6">
-                  <h3 className="font-sans font-bold text-xl">Staff Performance</h3>
-                </div>
-                <div className="h-[200px]">
-                  <StaffPerformanceBar data={previewData.staff} />
-                </div>
+            <div className="bg-white border border-gray-200 p-6 rounded-lg shadow-sm">
+              <div className="border-b border-gray-200 pb-4 mb-6">
+                <h3 className="font-sans font-bold text-xl">Staff Performance</h3>
+              </div>
+              <div className="h-[300px]">
+                <StaffPerformanceBar data={previewData.staff} />
               </div>
             </div>
           </div>
