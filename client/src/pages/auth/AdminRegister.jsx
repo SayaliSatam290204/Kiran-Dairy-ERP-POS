@@ -49,7 +49,7 @@ export const AdminRegister = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-[#FAF7F0] p-4 relative font-sans selection:bg-[#5B7A4F] selection:text-white py-8">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4 relative font-sans selection:bg-blue-600 selection:text-white py-8">
       <div className="-mb-6 z-10">
         <img src={logoImg} alt="Kiran Dairy Logo" className="w-32 md:w-36 h-auto object-contain mx-auto" />
       </div>
@@ -104,15 +104,15 @@ export const AdminRegister = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 rounded-sm font-bold transition-colors bg-[#5B7A4F] hover:bg-[#4a6340] text-white disabled:opacity-50 disabled:cursor-not-allowed mt-4 shadow-sm"
+            className="w-full py-3 rounded-md font-bold transition-colors bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 disabled:cursor-not-allowed mt-4 shadow-sm"
           >
             {loading ? "Creating Entry..." : "Create Admin Account"}
           </button>
 
-          <div className="mt-4 text-center pt-4 border-t border-[#E3DACB]">
-            <p className="text-sm text-[#2B2721]/70">
+          <div className="mt-4 text-center pt-4 border-t border-gray-200">
+            <p className="text-sm text-gray-500">
               Already have an account?{" "}
-              <Link className="text-[#5B7A4F] hover:text-[#4a6340] font-semibold transition-colors" to="/login?role=admin">
+              <Link className="text-blue-600 hover:text-blue-700 font-semibold transition-colors" to="/login?role=admin">
                 Go to Login
               </Link>
             </p>

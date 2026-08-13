@@ -54,8 +54,8 @@ export const BranchRevenueBarChart = ({ data = [] }) => {
         <YAxis />
         <Tooltip />
 
-        <Bar dataKey="actualRevenue" fill="#5B7A4F" name="Actual Revenue" />
-        <Bar dataKey="expectedRevenue" fill="#C77B3F" name="Expected Revenue" />
+        <Bar dataKey="actualRevenue" fill="#2563eb" name="Actual Revenue" />
+        <Bar dataKey="expectedRevenue" fill="#94a3b8" name="Expected Revenue" />
       </BarChart>
     </ResponsiveContainer>
   );
@@ -90,7 +90,7 @@ export const TopBranchesBarChart = ({ data = [] }) => {
         <YAxis />
         <Tooltip />
 
-        <Bar dataKey="revenue" fill="#5B7A4F" name="Revenue" />
+        <Bar dataKey="revenue" fill="#2563eb" name="Revenue" />
       </BarChart>
     </ResponsiveContainer>
   );
@@ -124,15 +124,15 @@ export const StaffPerformanceBar = ({ data = [] }) => {
         <YAxis />
         <Tooltip />
 
-        <Bar dataKey="sales" fill="#A89F91" name="Sales" />
-        <Bar dataKey="amount" fill="#5B7A4F" name="Amount" />
+        <Bar dataKey="sales" fill="#60a5fa" name="Sales" />
+        <Bar dataKey="amount" fill="#2563eb" name="Amount" />
       </BarChart>
     </ResponsiveContainer>
   );
 };
 
 /* ---------------- PRODUCT PIE CHART ---------------- */
-const COLORS = ["#5B7A4F", "#C77B3F", "#A89F91", "#8C9B85", "#E3DACB"];
+const COLORS = ["#1d4ed8", "#2563eb", "#3b82f6", "#60a5fa", "#93c5fd"];
 
 export const ProductRevenuePieChart = ({ data = [] }) => {
   const formatted = data.map((item) => ({
