@@ -39,7 +39,7 @@ export const BranchRevenueBarChart = ({ data = [] }) => {
   }));
 
   return (
-    <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
+    <ResponsiveContainer width="99%" height="100%" minWidth={0} minHeight={0}>
       <BarChart data={formatted} margin={{ bottom: 10 }}>
         <CartesianGrid strokeDasharray="3 3" />
 
@@ -73,7 +73,7 @@ export const TopBranchesBarChart = ({ data = [] }) => {
 
 
   return (
-    <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
+    <ResponsiveContainer width="99%" height="100%" minWidth={0} minHeight={0}>
       <BarChart data={formatted} margin={{ bottom: 10 }}>
         <CartesianGrid strokeDasharray="3 3" />
 
@@ -107,7 +107,7 @@ export const StaffPerformanceBar = ({ data = [] }) => {
 
 
   return (
-    <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
+    <ResponsiveContainer width="99%" height="100%" minWidth={0} minHeight={0}>
       <BarChart data={formatted} margin={{ bottom: 10 }}>
         <CartesianGrid strokeDasharray="3 3" />
 
@@ -141,7 +141,7 @@ export const ProductRevenuePieChart = ({ data = [] }) => {
   }));
 
   return (
-    <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
+    <ResponsiveContainer width="99%" height="100%" minWidth={0} minHeight={0}>
       <PieChart>
         <Pie data={formatted} dataKey="value" nameKey="name" outerRadius={100}>
           {formatted.map((_, index) => (

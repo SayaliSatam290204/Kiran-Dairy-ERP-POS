@@ -37,7 +37,7 @@ const ProductRevenueChart = ({ data = [], selectedBranches = [] }) => {
   ];
 
   return (
-    <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
+    <ResponsiveContainer width="99%" height="100%" minWidth={0} minHeight={0}>
       <BarChart
         data={chartData}
         margin={{ top: 20, right: 30, left: 10, bottom: 70 }}
