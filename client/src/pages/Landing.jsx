@@ -31,8 +31,8 @@ export const Landing = () => {
     const fetchAdminStatus = async () => {
       try {
         const res = await authApi.adminExists();
-        setAdminExists(res.data.data.adminExists);
-        setSuperAdminExists(res.data.data.superAdminExists);
+        setAdminExists(res.data.adminExists);
+        setSuperAdminExists(res.data.superAdminExists);
       } catch (err) {
         console.error("Failed to fetch admin status", err);
       } finally {

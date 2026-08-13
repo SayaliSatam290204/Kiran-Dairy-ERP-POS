@@ -15,7 +15,7 @@ export const superAdminApi = {
     }
 
     const queryString = params.toString();
-    const url = `/super-admin/dashboard${queryString ? "?" + queryString : ""}`;
+    const url = `/api/super-admin/dashboard${queryString ? "?" + queryString : ""}`;
 
     return await axiosInstance.get(url);
   },
