@@ -14,6 +14,7 @@ import staffRoutes from './routes/staffRoutes.js';
 import staffPaymentRoutes from './routes/staffPaymentRoutes.js';
 import uploadRoutes from './routes/uploadRoutes.js';
 import superAdminRoutes from './routes/superAdminRoutes.js';
+import paymentRoutes from './routes/paymentRoutes.js';
 import { errorMiddleware } from "./middleware/errorMiddleware.js";
 
 const app = express();
@@ -42,10 +43,19 @@ app.use('/api/ledger', ledgerRoutes);
 app.use('/api/staff', staffRoutes);
 app.use('/api/staff-payment', staffPaymentRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/payment', paymentRoutes);
 
 // Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'Server is running' });
+});
+
+// 404 Not Found handler
+app.use((req, res, next) => {
+  res.status(404).json({
+    success: false,
+    message: `Route Not Found - ${req.originalUrl}`
+  });
 });
 
 // Error handling middleware

@@ -306,7 +306,9 @@ export const StockAlerts = () => {
                   </p>
                   {activeTab === 'stock' && item.pendingRequestQty != null && (
                     <div className="flex gap-2 mt-2">
-                      <Badge variant="yellow">Pending request: {item.pendingRequestQty} units</Badge>
+                      <Badge variant={item.pendingRequestStatus === 'approved' ? 'green' : 'yellow'}>
+                        {item.pendingRequestStatus === 'approved' ? 'Incoming' : 'Pending'} Request: {item.pendingRequestQty} units
+                      </Badge>
                     </div>
                   )}
                   {activeTab === 'requests' && (

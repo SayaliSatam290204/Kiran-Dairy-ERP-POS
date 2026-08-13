@@ -55,6 +55,25 @@ axiosInstance.interceptors.response.use(
       }
     }
     
+    // Check if it's a network error or server is down
+    if (!error.response || error.response?.status >= 500 || error.response?.status === 404) {
+      const customError = {
+        ...error,
+        response: {
+          ...error.response,
+          data: {
+            message: "The server is currently unavailable or offline. Please try again later.",
+            ...error.response?.data
+          }
+        }
+      };
+      // Overwrite the message if it's a generic 404/502 from proxy or network error
+      if (!error.response || typeof error.response.data === 'string' || error.message === 'Network Error') {
+        customError.response.data.message = "The server is currently offline or unreachable. Please verify your connection or try again later.";
+      }
+      return Promise.reject(customError);
+    }
+
     return Promise.reject(error);
   }
 );

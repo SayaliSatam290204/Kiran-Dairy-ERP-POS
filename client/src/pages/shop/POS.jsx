@@ -12,6 +12,9 @@ import { formatCurrency } from "../../utils/formatCurrency.js";
 import { staffApi } from "../../api/staffApi.js";
 import { Bill } from "../Bill.jsx"; 
 import { useAuth } from "../../hooks/useAuth.js";
+import { loadRazorpay } from "../../utils/loadRazorpay.js";
+import { paymentApi } from "../../api/paymentApi.js";
+import logoImg from "../../assets/logo.png";
 export const POS = () => {
   const [products, setProducts] = useState([]);
   const [pageLoading, setPageLoading] = useState(true);
@@ -464,16 +467,17 @@ export const POS = () => {
 
     setLoading(true);
 
-    try {
-      const payload = {
-        items: cart.map((item) => ({
-          productId: item.productId,
-          productName: item.productName,
-          quantity: item.quantity,
-          price: item.price,
-          unit: item.unit,
-        })),
-        totalAmount: grandTotal,
+    const finalizeSale = async (razorpayPaymentDetails = null) => {
+      try {
+        const payload = {
+          items: cart.map((item) => ({
+            productId: item.productId,
+            productName: item.productName,
+            quantity: item.quantity,
+            price: item.price,
+            unit: item.unit,
+          })),
+          totalAmount: grandTotal,
         staffId: selectedStaffId || undefined,
         shift: selectedShift,
         paymentMethod: splitPayment ? "Cash + UPI" : paymentMethod,
@@ -495,6 +499,7 @@ export const POS = () => {
                   last4: onlyDigits(cardDetails.cardNumber).slice(-4),
                   nameOnCard: cardDetails.nameOnCard,
                 }),
+                ...(razorpayPaymentDetails && { razorpayPaymentDetails })
               },
             },
       };
@@ -547,10 +552,90 @@ export const POS = () => {
       setBillOpen(true);
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to complete sale");
-    } finally {
       setLoading(false);
     }
   };
+
+  let digitalAmount = 0;
+  if (!splitPayment && (paymentMethod === "upi" || paymentMethod === "card")) {
+    digitalAmount = grandTotal;
+  } else if (splitPayment && paymentMethod === "Cash + UPI") {
+    digitalAmount = upiAmount;
+  }
+
+  if (digitalAmount > 0) {
+    try {
+      const res = await loadRazorpay();
+      if (!res) {
+        toast.error("Razorpay SDK failed to load. Are you online?");
+        setLoading(false);
+        return;
+      }
+
+      const result = await paymentApi.createOrder({ amount: digitalAmount });
+      if (!result.data.success) {
+        toast.error("Server error creating Razorpay order.");
+        setLoading(false);
+        return;
+      }
+
+      const { amount: orderAmount, id: order_id, currency } = result.data.order;
+
+      const options = {
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+        amount: orderAmount.toString(),
+        currency,
+        name: "Kiran Dairy",
+        description: "POS Billing Checkout",
+        order_id,
+        handler: async function (response) {
+          const verifyData = {
+            razorpay_order_id: response.razorpay_order_id,
+            razorpay_payment_id: response.razorpay_payment_id,
+            razorpay_signature: response.razorpay_signature,
+          };
+
+          try {
+            const verifyResult = await paymentApi.verifyPayment(verifyData);
+            if (verifyResult.data.success) {
+              toast.success("Online Payment Successful!");
+              await finalizeSale(verifyData);
+            } else {
+              toast.error("Payment Verification Failed!");
+              setLoading(false);
+            }
+          } catch (err) {
+            toast.error("Payment Verification Error!");
+            setLoading(false);
+          }
+        },
+        modal: {
+          ondismiss: function () {
+            setLoading(false);
+            toast.error("Payment cancelled by user");
+          },
+        },
+        prefill: {
+          name: "Customer",
+        },
+        theme: {
+          color: "#2563eb",
+        },
+        image: logoImg.startsWith('http') ? logoImg : `${window.location.origin}${logoImg}`,
+      };
+
+      const paymentObject = new window.Razorpay(options);
+      paymentObject.open();
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to initiate online payment.");
+      setLoading(false);
+    }
+  } else {
+    // Cash only
+    await finalizeSale();
+  }
+};
 
   return (
     <div>

@@ -82,7 +82,12 @@ export const ledgerController = {
                     $and: [
                       { $eq: ['$shopId', '$$shopId'] },
                       { $eq: ['$productId', '$$productId'] },
-                      { $eq: ['$status', 'pending'] }
+                      {
+                        $or: [
+                          { $eq: ['$status', 'pending'] },
+                          { $eq: ['$status', 'approved'] }
+                        ]
+                      }
                     ]
                   }
                 }
