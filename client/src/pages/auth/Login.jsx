@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import toast from "react-hot-toast";
-import { FaCrown } from "react-icons/fa";
+import { FaCrown, FaUserTie, FaStore, FaArrowLeft } from "react-icons/fa";
 import { authApi } from "../../api/authApi.js";
 import { useAuth } from "../../hooks/useAuth.js";
 import { Card } from "../../components/ui/Card.jsx";
 import { Input } from "../../components/ui/Input.jsx";
 import { Button } from "../../components/ui/Button.jsx";
+import logoImg from "../../assets/logo.png";
 
 export const Login = () => {
   const navigate = useNavigate();
@@ -22,7 +23,6 @@ export const Login = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  const isDev = import.meta?.env?.DEV;
 
   useEffect(() => {
     if (roleParam && !selectedRole) {
@@ -33,18 +33,6 @@ export const Login = () => {
   const handleRoleSelect = (role) => {
     setSelectedRole(role);
 
-    if (isDev) {
-      if (role === "admin") {
-        setEmail("admin@kiran-dairy.com");
-        setPassword("admin123");
-      } else if (role === "super-admin") {
-        setEmail("swaroopjadhav6161@gmail.com");
-        setPassword("Shree@45");
-      } else if (role === "shop") {
-        setEmail("Kiran Dairy Kharadi");
-        setPassword("admin123");
-      }
-    }
 
     setError("");
   };
@@ -84,7 +72,6 @@ export const Login = () => {
         return;
       }
 
-      // Log the user data before storing (for debugging)
       console.log('Login successful. User data:', user);
 
       login(user, token);
@@ -106,7 +93,7 @@ export const Login = () => {
       const message = err.response?.data?.message || "Login failed";
       setError(message);
       toast.error(message);
-      navigate("/", { replace: true });
+      // Removed navigate("/", { replace: true }) to allow user to retry without losing selected role
     } finally {
       setLoading(false);
     }
@@ -115,43 +102,63 @@ export const Login = () => {
   // Skip role selection if role from URL param
   if (!selectedRole) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-        <div className="w-full max-w-md bg-white rounded-xl shadow p-8">
-          <h1 className="text-3xl font-bold text-center mb-2 text-gray-800">
-            Kiran Dairy
-          </h1>
-          <p className="text-center text-gray-600 mb-8">Choose your role to continue</p>
+      <div className="min-h-screen flex items-center justify-center bg-[#FAF7F0] p-4 relative overflow-hidden font-sans selection:bg-[#5B7A4F] selection:text-white">
+        <div className="w-full max-w-md bg-white border border-[#E3DACB] rounded-none p-8 relative z-10 shadow-sm">
+          <div className="text-center mb-8">
+            <img src={logoImg} alt="Kiran Dairy Logo" className="w-32 h-auto mx-auto object-contain mb-2" />
+            <h1 className="text-3xl font-serif font-bold text-[#2B2721] tracking-tight">
+              Kiran Dairy
+            </h1>
+            <p className="text-[#2B2721]/70 mt-2 font-medium">Select access level</p>
+          </div>
 
-          <div className="space-y-3">
+          <div className="space-y-4">
             <button
               onClick={() => handleRoleSelect("super-admin")}
-              className="w-full text-center bg-purple-600 text-white py-3 rounded-lg hover:bg-purple-700 transition font-semibold flex items-center justify-center gap-2"
+              className="w-full group bg-white hover:bg-[#FAF7F0] border-[2px] border-[#E3DACB] hover:border-[#2B2721] text-[#2B2721] p-4 rounded-none transition-all duration-300 flex items-center gap-4"
             >
-              <FaCrown size={18} />
-              <span>Login as Super Admin</span>
+              <div className="w-10 h-10 border border-[#E3DACB] bg-white flex items-center justify-center group-hover:border-[#2B2721] transition-colors text-[#2B2721]">
+                <FaCrown size={18} />
+              </div>
+              <div className="text-left">
+                <div className="font-bold font-serif">Super Admin</div>
+                <div className="text-xs text-[#2B2721]/70">System owner access</div>
+              </div>
             </button>
 
             <button
               onClick={() => handleRoleSelect("admin")}
-              className="w-full text-center bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition font-semibold"
+              className="w-full group bg-white hover:bg-[#FAF7F0] border-[2px] border-[#E3DACB] hover:border-[#2B2721] text-[#2B2721] p-4 rounded-none transition-all duration-300 flex items-center gap-4"
             >
-              <span className="block"> Login as Admin</span>
+              <div className="w-10 h-10 border border-[#E3DACB] bg-white flex items-center justify-center group-hover:border-[#2B2721] transition-colors text-[#2B2721]">
+                <FaUserTie size={18} />
+              </div>
+              <div className="text-left">
+                <div className="font-bold font-serif">Admin</div>
+                <div className="text-xs text-[#2B2721]/70">Manage shops & inventory</div>
+              </div>
             </button>
 
             <button
               onClick={() => handleRoleSelect("shop")}
-              className="w-full text-center bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition font-semibold"
+              className="w-full group bg-white hover:bg-[#FAF7F0] border-[2px] border-[#E3DACB] hover:border-[#2B2721] text-[#2B2721] p-4 rounded-none transition-all duration-300 flex items-center gap-4"
             >
-              <span className="block">Login as Shop</span>
+              <div className="w-10 h-10 border border-[#E3DACB] bg-white flex items-center justify-center group-hover:border-[#2B2721] transition-colors text-[#2B2721]">
+                <FaStore size={18} />
+              </div>
+              <div className="text-left">
+                <div className="font-bold font-serif">Shop POS</div>
+                <div className="text-xs text-[#2B2721]/70">Point of sale access</div>
+              </div>
             </button>
           </div>
 
-          <div className="mt-6 text-center">
+          <div className="mt-8 text-center pt-6 border-t border-[#E3DACB]">
             <button
               onClick={() => navigate("/admin/register")}
-              className="text-sm text-gray-600 hover:underline"
+              className="text-sm font-semibold text-[#5B7A4F] hover:text-[#4a6340] transition-colors"
             >
-              Register Admin Account
+              Need an Admin Account? Register
             </button>
           </div>
         </div>
@@ -159,26 +166,17 @@ export const Login = () => {
     );
   }
 
-  // Login Form View
-  const getColorScheme = () => {
-    if (selectedRole === "super-admin") return { text: "purple", bg: "bg-purple-50", button: "bg-purple-600 hover:bg-purple-700" };
-    if (selectedRole === "admin") return { text: "blue", bg: "bg-blue-50", button: "bg-blue-600 hover:bg-blue-700" };
-    return { text: "green", bg: "bg-green-50", button: "bg-green-600 hover:bg-green-700" };
-  };
-
-  const colors = getColorScheme();
-  const textColor = colors.text;
-  const bgColor = colors.bg;
-  const buttonColor = colors.button;
-
   return (
-    <div className={`flex items-center justify-center min-h-screen ${bgColor}`}>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-[#FAF7F0] p-4 relative font-sans selection:bg-[#5B7A4F] selection:text-white py-8">
+      <div className="-mb-6 z-10">
+        <img src={logoImg} alt="Kiran Dairy Logo" className="w-32 md:w-36 h-auto object-contain mx-auto" />
+      </div>
       <Card
-        className="w-96"
-        title={`${selectedRole.charAt(0).toUpperCase() + selectedRole.slice(1)} Login`}
+        className="w-full max-w-md relative z-10"
+        title={`${selectedRole.charAt(0).toUpperCase() + selectedRole.slice(1)} Sign In`}
       >
         {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+          <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-none mb-6 text-sm font-medium">
             {error}
           </div>
         )}
@@ -186,12 +184,12 @@ export const Login = () => {
         <form onSubmit={handleSubmit} className="space-y-4">
           {selectedRole === "admin" || selectedRole === "super-admin" || selectedRole === "shop" ? (
             <Input
-              label={selectedRole === "shop" ? "Shop Name" : "Email"}
+              label={selectedRole === "shop" ? "Shop Name" : "Email Address"}
               type={selectedRole === "shop" ? "text" : "email"}
               placeholder={
                 selectedRole === "shop"
-                  ? "Enter your shop name"
-                  : "shop@example.com"
+                  ? "Enter shop identifier"
+                  : "name@kirandairy.com"
               }
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -200,64 +198,54 @@ export const Login = () => {
             />
           ) : null}
 
-          <div className="space-y-2">
+          <div className="space-y-3">
             <Input
-              label="Password"
+              label="Secure Password"
               type={showPassword ? "text" : "password"}
               autoComplete={showPassword ? "off" : "current-password"}
-              placeholder={
-                selectedRole === "shop"
-                  ? "Enter your password set by admin"
-                  : "Enter your password"
-              }
+              placeholder="Enter your credentials"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
               disabled={loading}
             />
-
-            <button
-              type="button"
-              onClick={() => setShowPassword((v) => !v)}
-              className={`text-xs text-${textColor}-600 hover:text-${textColor}-800 font-semibold`}
-              disabled={loading}
-            >
-              {showPassword ? "Hide password" : "Show password"}
-            </button>
             {selectedRole === "shop" && (
-              <p className="text-xs text-slate-500">
-                Shop users log in with their shop name and the password set by admin.
+              <p className="text-xs text-[#2B2721]/60 font-medium">
+                Note: Shop associates must use the credentials assigned by the administrative office.
               </p>
             )}
           </div>
 
-          <Button type="submit" disabled={loading} className={`w-full ${buttonColor}`}>
-            {loading ? "Logging in..." : "Login"}
-          </Button>
+          <button 
+            type="submit" 
+            disabled={loading} 
+            className="w-full py-3 rounded-sm font-bold transition-colors bg-[#5B7A4F] hover:bg-[#4a6340] text-white disabled:opacity-50 disabled:cursor-not-allowed mt-4 shadow-sm"
+          >
+            {loading ? "Authenticating..." : "Access Ledger"}
+          </button>
         </form>
 
-
         {roleParam && (
-          <div className="mt-6 pt-4 border-t border-gray-300">
+          <div className="mt-4 pt-4 border-t border-[#E3DACB]">
             <button
               type="button"
               onClick={() => navigate("/")}
-              className="w-full text-center py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold transition"
+              className="w-full text-center py-2.5 border-[2px] border-[#2B2721] rounded-none hover:bg-[#2B2721] hover:text-[#FAF7F0] text-[#2B2721] font-bold transition-colors flex items-center justify-center gap-2"
               disabled={loading}
             >
-              ← Back to Landing
+              <FaArrowLeft className="text-sm" /> Return to Home
             </button>
           </div>
         )}
         {!roleParam && (
-          <div className="mt-6 pt-4 border-t border-gray-300">
+          <div className="mt-4 pt-4 border-t border-[#E3DACB]">
             <button
               type="button"
-              onClick={() => navigate("/admin/register")}
-              className="w-full text-center py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold transition"
+              onClick={handleBackToRoleSelect}
+              className="w-full text-center py-2.5 border-[2px] border-[#2B2721] rounded-none hover:bg-[#2B2721] hover:text-[#FAF7F0] text-[#2B2721] font-bold transition-colors flex items-center justify-center gap-2"
               disabled={loading}
             >
-              ← Register Admin Account
+              <FaArrowLeft className="text-sm" /> Change Role
             </button>
           </div>
         )}

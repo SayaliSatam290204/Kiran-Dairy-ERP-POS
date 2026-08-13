@@ -6,6 +6,7 @@ import { useAuth } from "../../hooks/useAuth.js";
 import { Card } from "../../components/ui/Card.jsx";
 import { Input } from "../../components/ui/Input.jsx";
 import { Button } from "../../components/ui/Button.jsx";
+import logoImg from "../../assets/logo.png";
 
 export const AdminRegister = () => {
   const navigate = useNavigate();
@@ -48,8 +49,11 @@ export const AdminRegister = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-blue-50 p-4">
-      <Card className="w-96" title="Admin Registration">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-[#FAF7F0] p-4 relative font-sans selection:bg-[#5B7A4F] selection:text-white py-8">
+      <div className="-mb-6 z-10">
+        <img src={logoImg} alt="Kiran Dairy Logo" className="w-32 md:w-36 h-auto object-contain mx-auto" />
+      </div>
+      <Card className="w-full max-w-md relative z-10" title="Admin Registration">
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input
             label="Full Name"
@@ -60,7 +64,7 @@ export const AdminRegister = () => {
           />
 
           <Input
-            label="Email"
+            label="Email Address"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -73,14 +77,14 @@ export const AdminRegister = () => {
             type="password"
             value={adminKey}
             onChange={(e) => setAdminKey(e.target.value)}
-            placeholder="Required key"
+            placeholder="Required system key"
             required
             disabled={loading}
             autoComplete="new-password"
           />
 
           <Input
-            label="Password"
+            label="Secure Password"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -97,20 +101,22 @@ export const AdminRegister = () => {
             disabled={loading}
           />
 
-          <Button
+          <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+            className="w-full py-3 rounded-sm font-bold transition-colors bg-[#5B7A4F] hover:bg-[#4a6340] text-white disabled:opacity-50 disabled:cursor-not-allowed mt-4 shadow-sm"
           >
-            {loading ? "Creating..." : "Create Admin Account"}
-          </Button>
+            {loading ? "Creating Entry..." : "Create Admin Account"}
+          </button>
 
-          <p className="text-sm text-gray-600 text-center">
-            Already have an account?{" "}
-            <Link className="text-blue-700 font-semibold" to="/login?role=admin">
-            Go to Login
-            </Link>
-          </p>
+          <div className="mt-4 text-center pt-4 border-t border-[#E3DACB]">
+            <p className="text-sm text-[#2B2721]/70">
+              Already have an account?{" "}
+              <Link className="text-[#5B7A4F] hover:text-[#4a6340] font-semibold transition-colors" to="/login?role=admin">
+                Go to Login
+              </Link>
+            </p>
+          </div>
         </form>
       </Card>
     </div>

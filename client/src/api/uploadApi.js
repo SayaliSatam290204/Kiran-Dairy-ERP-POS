@@ -5,7 +5,7 @@ export const uploadApi = {
     const formData = new FormData();
     formData.append('image', file);
 
-    return axiosInstance.post('/upload/product-image', formData, {
+    return axiosInstance.post('/api/upload/product-image', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     });
   }

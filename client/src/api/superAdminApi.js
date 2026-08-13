@@ -22,7 +22,7 @@ export const superAdminApi = {
 
   // Get detailed branch report
   getBranchReport: async (shopId) => {
-    return await axiosInstance.get(`/super-admin/branch/${shopId}/report`);
+    return await axiosInstance.get(`/api/super-admin/branch/${shopId}/report`);
   },
 
   // Get revenue trends
@@ -30,6 +30,6 @@ export const superAdminApi = {
     const params = {};
     if (startDate) params.startDate = startDate;
     if (endDate) params.endDate = endDate;
-    return await axiosInstance.get("/super-admin/revenue-trends", { params });
+    return await axiosInstance.get("/api/super-admin/revenue-trends", { params });
   }
 };

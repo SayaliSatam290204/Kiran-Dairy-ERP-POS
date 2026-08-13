@@ -179,7 +179,7 @@ export const POS = () => {
 
   // Get base server URL (remove /api from VITE_API_BASE_URL for image paths)
   const getServerBase = () => {
-    const apiUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
+    const apiUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
     return apiUrl.replace(/\/api\/?$/, ""); // Remove trailing /api
   };
 

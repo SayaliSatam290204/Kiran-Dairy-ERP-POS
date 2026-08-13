@@ -132,7 +132,8 @@ export const ShopLedger = () => {
       const res = await uploadApi.uploadProductImage(file);
       const url = res.data.data.url; // "/uploads/products/xxx.jpg"
       setNewProductForm((p) => ({ ...p, image: url }));
-      setPreview(`${import.meta.env.VITE_API_BASE_URL}${url}`);
+      const serverBase = (import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || "http://localhost:5000").replace(/\/api\/?$/, "");
+      setPreview(`${serverBase}${url}`);
       toast.success("Image uploaded successfully");
     } catch (err) {
       toast.error(err.response?.data?.message || "Image upload failed");

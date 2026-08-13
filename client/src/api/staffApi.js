@@ -6,36 +6,36 @@ export const staffApi = {
     const params = new URLSearchParams();
     if (shopId) params.append('shopId', shopId);
     
-    return axiosInstance.get(`/staff?${params.toString()}`);
+    return axiosInstance.get(`/api/staff?${params.toString()}`);
   },
 
   // Get staff by shop
   getStaffByShop: async (shopId) => {
-    return axiosInstance.get(`/staff/shop/${shopId}`);
+    return axiosInstance.get(`/api/staff/shop/${shopId}`);
   },
 
   // Authorize staff for POS billing
   authorizeStaff: async (data) => {
-    return axiosInstance.post('/staff/authorize', data);
+    return axiosInstance.post('/api/staff/authorize', data);
   },
 
   // Get single staff
   getStaffById: async (id) => {
-    return axiosInstance.get(`/staff/${id}`);
+    return axiosInstance.get(`/api/staff/${id}`);
   },
 
   // Create staff
   createStaff: async (data) => {
-    return axiosInstance.post('/staff', data);
+    return axiosInstance.post('/api/staff', data);
   },
 
   // Update staff
   updateStaff: async (id, data) => {
-    return axiosInstance.put(`/staff/${id}`, data);
+    return axiosInstance.put(`/api/staff/${id}`, data);
   },
 
   // Delete staff
   deleteStaff: async (id) => {
-    return axiosInstance.delete(`/staff/${id}`);
+    return axiosInstance.delete(`/api/staff/${id}`);
   }
 };

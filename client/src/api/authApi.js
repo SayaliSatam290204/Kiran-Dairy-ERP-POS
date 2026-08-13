@@ -2,11 +2,11 @@
 import axiosInstance from "./axiosInstance.js";
 
 export const authApi = {
-  login: (payload) => axiosInstance.post("/auth/login", payload),
-  registerAdmin: (payload) => axiosInstance.post("/auth/admin/register", payload),
-  registerSuperAdmin: (payload) => axiosInstance.post("/auth/super-admin/register", payload),
-  adminExists: () => axiosInstance.get("/auth/admin/exists"),
+  login: (payload) => axiosInstance.post("/api/auth/login", payload),
+  registerAdmin: (payload) => axiosInstance.post("/api/auth/admin/register", payload),
+  registerSuperAdmin: (payload) => axiosInstance.post("/api/auth/super-admin/register", payload),
+  adminExists: () => axiosInstance.get("/api/auth/admin/exists"),
   // ✅ Add this line:
-  changePassword: (payload) => axiosInstance.post("/auth/change-password", payload),
+  changePassword: (payload) => axiosInstance.post("/api/auth/change-password", payload),
 };
 
