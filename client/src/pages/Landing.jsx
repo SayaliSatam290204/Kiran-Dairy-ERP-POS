@@ -48,7 +48,12 @@ export const Landing = () => {
       try {
         const response = await shopApi.getPreviewData();
         if (response.data.success) {
-          setPreviewData(response.data.data);
+          const apiData = response.data.data;
+          setPreviewData({
+            performance: apiData.branchData || [],
+            topBranches: apiData.topBranchesData || [],
+            staff: apiData.staffData || []
+          });
           setDataError(false);
         }
       } catch (error) {
