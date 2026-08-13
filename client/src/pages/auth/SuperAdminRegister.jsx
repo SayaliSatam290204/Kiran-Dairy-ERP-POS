@@ -7,13 +7,13 @@ import { Card } from "../../components/ui/Card.jsx";
 import { Input } from "../../components/ui/Input.jsx";
 import { Button } from "../../components/ui/Button.jsx";
 
-export const AdminRegister = () => {
+export const SuperAdminRegister = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [adminKey, setAdminKey] = useState("");
+  const [superAdminKey, setSuperAdminKey] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -28,18 +28,18 @@ export const AdminRegister = () => {
 
     setLoading(true);
     try {
-      const res = await authApi.registerAdmin({
+      const res = await authApi.registerSuperAdmin({
         name,
         email,
         password,
-        adminKey: adminKey || undefined,
+        superAdminKey: superAdminKey || undefined,
       });
 
       const { user, token } = res.data.data;
 
       login(user, token);
-      toast.success("Admin registered successfully!");
-      navigate("/admin/dashboard");
+      toast.success("Super Admin registered successfully!");
+      navigate("/super-admin/dashboard");
     } catch (err) {
       toast.error(err.response?.data?.message || "Registration failed");
     } finally {
@@ -48,8 +48,8 @@ export const AdminRegister = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-blue-50 p-4">
-      <Card className="w-96" title="Admin Registration">
+    <div className="min-h-screen flex items-center justify-center bg-purple-50 p-4">
+      <Card className="w-96" title="Super Admin Registration">
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input
             label="Full Name"
@@ -69,10 +69,10 @@ export const AdminRegister = () => {
           />
 
           <Input
-            label="Admin Key"
+            label="Super Admin Key"
             type="password"
-            value={adminKey}
-            onChange={(e) => setAdminKey(e.target.value)}
+            value={superAdminKey}
+            onChange={(e) => setSuperAdminKey(e.target.value)}
             placeholder="Required key"
             required
             disabled={loading}
@@ -100,14 +100,14 @@ export const AdminRegister = () => {
           <Button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+            className="w-full bg-purple-600 hover:bg-purple-700 text-white"
           >
-            {loading ? "Creating..." : "Create Admin Account"}
+            {loading ? "Creating..." : "Create Super Admin"}
           </Button>
 
           <p className="text-sm text-gray-600 text-center">
             Already have an account?{" "}
-            <Link className="text-blue-700 font-semibold" to="/login?role=admin">
+            <Link className="text-purple-700 font-semibold" to="/login?role=super-admin">
             Go to Login
             </Link>
           </p>

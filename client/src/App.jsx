@@ -4,7 +4,8 @@ import { AuthProvider } from "./context/AuthContext.jsx";
 
 // Auth Pages
 import { Login } from "./pages/auth/Login.jsx";
-import { Register } from "./pages/auth/Register.jsx";
+import { AdminRegister } from "./pages/auth/AdminRegister.jsx";
+import { SuperAdminRegister } from "./pages/auth/SuperAdminRegister.jsx";
 
 // Landing Page
 import Landing from "./pages/Landing.jsx";
@@ -66,7 +67,8 @@ function App() {
 
           {/* Auth */}
           <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
+          <Route path="/admin/register" element={<AdminRegister />} />
+          <Route path="/super-admin/register" element={<SuperAdminRegister />} />
 
           {/* Super Admin */}
           <Route

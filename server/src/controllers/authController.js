@@ -222,6 +222,7 @@ export const authController = {
     }
   },
 
+  // The base register User is not exposed as a route anymore, only internal usage.
   register: registerUser,
 
   registerAdmin: async (req, res) => {
@@ -230,6 +231,14 @@ export const authController = {
       return res.status(403).json({ message: "Invalid or missing admin key" });
     }
     return registerUser({ ...req, body: { ...req.body, role: "admin" } }, res);
+  },
+
+  registerSuperAdmin: async (req, res) => {
+    const requiredKey = process.env.SUPER_ADMIN_REGISTRATION_KEY;
+    if (requiredKey && req.body?.superAdminKey !== requiredKey) {
+      return res.status(403).json({ message: "Invalid or missing super-admin key" });
+    }
+    return registerUser({ ...req, body: { ...req.body, role: "super-admin" } }, res);
   },
 
   changePassword: async (req, res) => {
@@ -277,10 +286,12 @@ export const authController = {
 
   adminExists: async (req, res) => {
     try {
-      const count = await User.countDocuments({
-        role: { $in: ["admin", "super-admin"] }
+      const adminCount = await User.countDocuments({ role: "admin" });
+      const superAdminCount = await User.countDocuments({ role: "super-admin" });
+      res.json({ 
+        adminExists: adminCount > 0,
+        superAdminExists: superAdminCount > 0 
       });
-      res.json({ exists: count > 0 });
     } catch (error) {
       res.status(500).json({ message: error.message });
     }

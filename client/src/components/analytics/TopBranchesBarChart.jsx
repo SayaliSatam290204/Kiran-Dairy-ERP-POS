@@ -18,7 +18,7 @@ const TopBranchesBarChart = ({ data = [] }) => {
   }));
 
   return (
-    <ResponsiveContainer width="100%" height="100%">
+    <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
       <BarChart
         data={chartData}
         margin={{ top: 20, right: 20, left: 10, bottom: 40 }}

@@ -23,7 +23,10 @@ import {
   StaffPerformanceBar
 } from '../components/common/ChartContainer.jsx';
 import { shopApi } from '../api/shopApi.js';
+import { authApi } from '../api/authApi.js';
 import { useState, useEffect } from 'react';
+
+const PREVIEW_DAYS = 7;
 
 const FALLBACK_DATA = {
   branchData: [
@@ -61,7 +64,9 @@ const Landing = () => {
   });
   const [loading, setLoading] = useState(true);
   const [rawPreview, setRawPreview] = useState(null);
+  const [previewSource, setPreviewSource] = useState("loading");
   const [showPreviewDebug, setShowPreviewDebug] = useState(false);
+  const [adminStatus, setAdminStatus] = useState({ adminExists: false, superAdminExists: false });
 
   useEffect(() => {
     const fetchPreviewData = async () => {
@@ -69,21 +74,41 @@ const Landing = () => {
         const response = await shopApi.getPreviewData();
         console.debug("[Landing] preview response:", response);
         setRawPreview(response.data || response);
-        const data = response.data.data || {};
-        setPreviewData({
-          branchData: data.branchData?.length ? data.branchData : FALLBACK_DATA.branchData,
-          topBranchesData: data.topBranchesData?.length ? data.topBranchesData : FALLBACK_DATA.topBranchesData,
-          staffData: data.staffData?.length ? data.staffData : FALLBACK_DATA.staffData,
-        });
+
+        const payload = response.data?.data ?? response.data;
+        const hasData = payload && (payload.branchData?.length || payload.topBranchesData?.length || payload.staffData?.length);
+
+        if (hasData) {
+          setPreviewData({
+            branchData: payload.branchData || FALLBACK_DATA.branchData,
+            topBranchesData: payload.topBranchesData || FALLBACK_DATA.topBranchesData,
+            staffData: payload.staffData || FALLBACK_DATA.staffData,
+          });
+          setPreviewSource("live");
+        } else {
+          setPreviewData(FALLBACK_DATA);
+          setPreviewSource("fallback");
+        }
       } catch (error) {
         console.error('Preview data fetch failed:', error);
         setPreviewData(FALLBACK_DATA);
+        setPreviewSource("fallback");
       } finally {
         setLoading(false);
       }
     };
 
+    const fetchAdminStatus = async () => {
+      try {
+        const response = await authApi.adminExists();
+        setAdminStatus(response.data);
+      } catch (error) {
+        console.error('Failed to fetch admin status:', error);
+      }
+    };
+
     fetchPreviewData();
+    fetchAdminStatus();
   }, []);
 
   return (
@@ -116,14 +141,14 @@ const Landing = () => {
             </Link>
 
             <Link
-              to="/login?role=admin"
+              to={adminStatus.adminExists ? "/login?role=admin" : "/admin/register"}
               className="px-4 py-2 border border-white text-white rounded-lg hover:bg-white hover:text-emerald-700 transition"
             >
               Admin
             </Link>
 
             <Link
-              to="/login?role=super-admin"
+              to={adminStatus.superAdminExists ? "/login?role=super-admin" : "/super-admin/register"}
               className="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-700 transition"
             >
               Super Admin
@@ -291,7 +316,12 @@ const Landing = () => {
               Live System Preview
             </h3>
             <p className="text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">
-              See your dashboard in action - real-time analytics, revenue tracking, and performance insights
+              See your dashboard in action over the last {PREVIEW_DAYS} days — real-time analytics, revenue tracking, and performance insights.
+            </p>
+            <p className="mt-4 text-sm font-semibold text-slate-600">
+              Preview source: <span className={previewSource === "live" ? "text-emerald-700" : "text-orange-600"}>
+                {previewSource === "loading" ? "Loading..." : previewSource === "live" ? "Live data" : "Fallback data"}
+              </span>
             </p>
           </div>
 
@@ -464,7 +494,7 @@ const Landing = () => {
               <span className="relative z-10 block">Start Shop Now</span>
             </Link>
             <Link
-              to="/login?role=admin"
+              to={adminStatus.adminExists ? "/login?role=admin" : "/admin/register"}
               className="animate-float [animation-delay:0.2s] group relative bg-gradient-to-r from-slate-900/90 to-slate-800/90 backdrop-blur-xl text-white border-2 border-white/30 px-10 py-5 rounded-3xl font-bold text-lg shadow-2xl hover:shadow-slate-500/30 hover:shadow-3xl hover:-translate-y-2 hover:scale-[1.05] hover:border-white/60 transition-all duration-700 min-w-[200px] overflow-hidden"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-700" />

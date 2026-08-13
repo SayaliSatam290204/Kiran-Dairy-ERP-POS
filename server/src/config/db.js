@@ -7,10 +7,13 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.join(__dirname, "../../.env") });
 
 const connectDB = async () => {
-  const uri = process.env.MONGODB_URI;
+  const localUri = process.env.LOCAL_MONGODB_URI;
+  const remoteUri = process.env.MONGODB_URI;
+  const isDev = process.env.NODE_ENV === "development";
+  const uri = isDev ? localUri || remoteUri : remoteUri || localUri;
 
   if (!uri) {
-    throw new Error("MONGODB_URI is missing in server/.env");
+    throw new Error("MONGODB_URI or LOCAL_MONGODB_URI is missing in server/.env");
   }
 
   try {

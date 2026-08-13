@@ -148,10 +148,10 @@ export const Login = () => {
 
           <div className="mt-6 text-center">
             <button
-              onClick={() => navigate("/register")}
+              onClick={() => navigate("/admin/register")}
               className="text-sm text-gray-600 hover:underline"
             >
-              Don't have an account? Create one
+              Register Admin Account
             </button>
           </div>
         </div>
@@ -253,11 +253,11 @@ export const Login = () => {
           <div className="mt-6 pt-4 border-t border-gray-300">
             <button
               type="button"
-              onClick={() => navigate("/register")}
+              onClick={() => navigate("/admin/register")}
               className="w-full text-center py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold transition"
               disabled={loading}
             >
-              ← Create new account
+              ← Register Admin Account
             </button>
           </div>
         )}

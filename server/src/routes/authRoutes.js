@@ -5,11 +5,11 @@ import { authMiddleware } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-// Public registration (admin / shop from Register.jsx)
-router.post("/register", authController.register);
-
-// Admin Registration (AdminRegister.jsx)
+// Admin Registration
 router.post("/admin/register", authController.registerAdmin);
+
+// Super-Admin Registration
+router.post("/super-admin/register", authController.registerSuperAdmin);
 
 // ✅ Check if admin exists (for registration flow)
 router.get("/admin/exists", authController.adminExists);
