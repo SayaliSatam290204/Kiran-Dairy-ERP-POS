@@ -9,6 +9,9 @@ import { SuperAdminRegister } from "./pages/auth/SuperAdminRegister.jsx";
 
 // Landing Page
 import Landing from "./pages/Landing.jsx";
+import { Terms } from "./pages/Terms.jsx";
+import { FAQ } from "./pages/FAQ.jsx";
+import { About } from "./pages/About.jsx";
 
 // Admin Pages
 import { AdminDashboard } from "./pages/admin/AdminDashboard.jsx";
@@ -64,6 +67,9 @@ function App() {
         <Routes>
           {/* Root -> Landing Page */}
           <Route path="/" element={<Landing />} />
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/faq" element={<FAQ />} />
+          <Route path="/about" element={<About />} />
 
           {/* Auth */}
           <Route path="/login" element={<Login />} />

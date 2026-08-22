@@ -269,15 +269,68 @@ export const Landing = () => {
       </div>
 
       {/* Footer */}
-      <footer className="bg-white border-t border-gray-200 py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="flex items-center gap-3">
-            <img src={logoImg} alt="Kiran Dairy Logo" className="w-12 h-auto md:w-16 object-contain" />
-            <span className="font-sans font-bold tracking-tight text-lg">Kiran Dairy ERP</span>
+      <footer className="bg-gray-900 border-t border-gray-800 pt-16 pb-8 text-gray-300">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 md:gap-8 mb-12">
+            
+            {/* Brand Column */}
+            <div className="col-span-1 md:col-span-1">
+              <div className="flex items-center gap-3 mb-6">
+                <img src={logoImg} alt="Kiran Dairy Logo" className="w-12 h-auto object-contain" />
+                <span className="font-sans font-bold tracking-tight text-xl text-white">Kiran Dairy</span>
+              </div>
+              <p className="text-sm text-gray-400 mb-6 leading-relaxed">
+                Empowering dairy operations from farm to counter with modern digital solutions.
+              </p>
+            </div>
+
+            {/* Quick Links */}
+            <div>
+              <h4 className="text-white font-semibold mb-6 uppercase tracking-wider text-sm">Portals</h4>
+              <ul className="space-y-3 text-sm">
+                <li><Link to="/login?role=shop" className="hover:text-blue-400 transition-colors">Shop POS</Link></li>
+                <li><Link to={adminLink} className="hover:text-blue-400 transition-colors">Admin Access</Link></li>
+                <li><Link to={superAdminLink} className="hover:text-blue-400 transition-colors">Owner Dashboard</Link></li>
+              </ul>
+            </div>
+
+            {/* Resources */}
+            <div>
+              <h4 className="text-white font-semibold mb-6 uppercase tracking-wider text-sm">Resources</h4>
+              <ul className="space-y-3 text-sm">
+                <li><a href="#metrics" className="hover:text-blue-400 transition-colors">Live Ledger</a></li>
+                <li><Link to="/terms" className="hover:text-blue-400 transition-colors">Terms and Conditions</Link></li>
+                <li><Link to="/faq" className="hover:text-blue-400 transition-colors">FAQ</Link></li>
+                <li><Link to="/about" className="hover:text-blue-400 transition-colors">About Kiran Dairy</Link></li>
+              </ul>
+            </div>
+
+            {/* Contact */}
+            <div>
+              <h4 className="text-white font-semibold mb-6 uppercase tracking-wider text-sm">Contact</h4>
+              <ul className="space-y-3 text-sm">
+                <li className="flex items-start gap-3">
+                  <FaMapMarkerAlt className="w-4 h-4 mt-0.5 text-gray-500" />
+                  <span>123 Dairy Road,<br />Pune, Maharashtra 411014</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <FaTruck className="w-4 h-4 text-gray-500" />
+                  <span>support@kirandairy.com</span>
+                </li>
+              </ul>
+            </div>
+
           </div>
-          
-          <div className="text-sm text-gray-400">
-            &copy; {new Date().getFullYear()} Kiran Dairy Operations. All rights reserved.
+
+          {/* Bottom Bar */}
+          <div className="pt-8 border-t border-gray-800 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div className="text-sm text-gray-500">
+              &copy; {new Date().getFullYear()} Kiran Dairy Operations. All rights reserved.
+            </div>
+            <div className="flex gap-6 text-sm">
+              <a href="#" className="text-gray-500 hover:text-white transition-colors">Privacy Policy</a>
+              <a href="#" className="text-gray-500 hover:text-white transition-colors">Terms of Service</a>
+            </div>
           </div>
         </div>
       </footer>

@@ -211,7 +211,7 @@ export const shopController = {
 
   getPreviewData: async (req, res) => {
     try {
-      const preview = await getSuperAdminDashboard({ days: 7, limit: 5 });
+      const preview = await getSuperAdminDashboard({ days: 30, limit: 5 });
       const branchData = preview.branchAnalytics || [];
       const topBranchesData = preview.summary?.topBranches || [];
       const allStaffPerformance = await staffPerformanceService.getAllStaffPerformance();
